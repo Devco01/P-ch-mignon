@@ -43,7 +43,7 @@ export async function createBanProofThread(message, userId) {
       const recovered = await resolveThreadFromMessage(await message.fetch?.().catch(() => message));
       if (recovered) return recovered;
       if (attempt >= 3) {
-        console.warn(`[Pêche Mignon] Création fil preuves échouée:`, err?.message || err);
+        console.warn(`[Péché Mignon] Création fil preuves échouée:`, err?.message || err);
         return null;
       }
       await wait(400 * (attempt + 1));

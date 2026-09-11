@@ -71,10 +71,22 @@ function parseAutoThreadChannelIds() {
   return new Set(parseCsvList(process.env.AUTO_THREAD_CHANNEL_IDS || ''));
 }
 
-function parseSelfieReactionIds() {
-  const fromIds = parseCsvList(process.env.SELFIE_REACTION_IDS || '');
-  const fromUrls = parseCsvList(process.env.SELFIE_REACTIONS || '');
+function parseAutoMediaCategoryIds() {
+  return new Set(parseCsvList(process.env.AUTO_MEDIA_CATEGORY_IDS || ''));
+}
+
+function parseReactionIdList(primaryKey, fallbackKey) {
+  const fromIds = parseCsvList(process.env[primaryKey] || '');
+  const fromUrls = parseCsvList(process.env[fallbackKey] || '');
   return fromIds.length ? fromIds : fromUrls;
+}
+
+function parseSelfieReactionIds() {
+  return parseReactionIdList('SELFIE_REACTION_IDS', 'SELFIE_REACTIONS');
+}
+
+function parseCategoryReactionIds() {
+  return parseReactionIdList('CATEGORY_REACTION_IDS', 'CATEGORY_REACTIONS');
 }
 
 function envId(key) {
@@ -97,9 +109,9 @@ export const config = {
   useGuildMembersIntent,
   useMessageContentIntent,
   /** Embeds de sanctions (ban, warn, unban, unwarn). */
-  embedColorSanction: parseHexColor(process.env.EMBED_COLOR_SANCTION || process.env.DISCORD_EMBED_COLOR_SANCTION, 0xef233c),
+  embedColorSanction: parseHexColor(process.env.EMBED_COLOR_SANCTION || process.env.DISCORD_EMBED_COLOR_SANCTION, 0xc8102e),
   /** Embeds hors sanctions (présentation, tickets, analyse). */
-  embedColorOther: parseHexColor(process.env.EMBED_COLOR_OTHER || process.env.DISCORD_EMBED_COLOR_OTHER, 0xf6b3ce),
+  embedColorOther: parseHexColor(process.env.EMBED_COLOR_OTHER || process.env.DISCORD_EMBED_COLOR_OTHER, 0xc8102e),
   /** Marque footer / auteur des embeds (règlement, infos, sanctions). */
   embedBrand: (process.env.EMBED_BRAND || 'Péché Mignon').trim() || 'Péché Mignon',
   presentationReactions: parsePresentationReactions(),
@@ -109,6 +121,10 @@ export const config = {
   selfieChannelIds: parseSelfieChannelIds(),
   selfieReactionIds: parseSelfieReactionIds(),
   autoThreadChannelIds: parseAutoThreadChannelIds(),
+  /** Catégories : tous les salons enfants ont auto-fil + auto-react. */
+  autoMediaCategoryIds: parseAutoMediaCategoryIds(),
+  /** Réactions auto des salons dans AUTO_MEDIA_CATEGORY_IDS (sinon SELFIE_REACTION_IDS). */
+  categoryReactionIds: parseCategoryReactionIds(),
   ticketStaffRoleIds: parseCsvList(process.env.TICKET_STAFF_ROLE_IDS || ''),
   ticketChannelId: envId('TICKET_CHANNEL_ID'),
   /** Salon des transcripts (tickets fermés). */
@@ -126,6 +142,20 @@ export const config = {
   infoLevel5RoleId: envId('INFO_LEVEL_5_ROLE_ID'),
   infoMpChannelId: envId('INFO_MP_CHANNEL_ID'),
 };
+
+/** Catégorie Discord d’un salon (ou du salon parent si c’est un fil). */
+export function getGuildCategoryId(channel) {
+  if (!channel) return null;
+  if (typeof channel.isThread === 'function' && channel.isThread()) {
+    return channel.parent?.parentId || null;
+  }
+  return channel.parentId || null;
+}
+
+export function isAutoMediaCategoryChannel(channel) {
+  const categoryId = getGuildCategoryId(channel);
+  return Boolean(categoryId && config.autoMediaCategoryIds.has(String(categoryId)));
+}
 
 export function validateConfig() {
   const missing = [];

@@ -1,7 +1,7 @@
 {
   "name": "peche-mignon",
   "version": "1.0.0",
-  "description": "Pêche Mignon — Bot Discord modération, présentations et tickets (threads privés)",
+  "description": "Péché Mignon — Bot Discord modération, présentations et tickets (threads privés)",
   "main": "src/index.js",
   "type": "module",
   "scripts": {

@@ -126,7 +126,7 @@ async function sendTicketTranscript(client, { thread, ticket, closedById, closeR
   if (!channelId) return false;
   const dest = await client.channels.fetch(channelId).catch(() => null);
   if (!dest?.isTextBased?.()) {
-    console.warn(`[Pêche Mignon] Salon transcripts introuvable: ${channelId}`);
+    console.warn(`[Péché Mignon] Salon transcripts introuvable: ${channelId}`);
     return false;
   }
 
@@ -187,7 +187,7 @@ async function ensureTicketChannelMemberAccess(channel, guild) {
     try {
       await channel.permissionOverwrites.edit(target, allow, { reason: 'Permettre aux membres d’ouvrir des tickets' });
     } catch (err) {
-      console.warn(`[Pêche Mignon] tickets overwrite ${target.id}:`, err?.message || err);
+      console.warn(`[Péché Mignon] tickets overwrite ${target.id}:`, err?.message || err);
     }
   }
 }
@@ -199,7 +199,7 @@ async function addMemberToTicketThread(thread, userId) {
       const has = thread.members.cache.has(userId) || (await thread.members.fetch(userId).then(() => true).catch(() => false));
       if (has) return true;
     } catch (err) {
-      console.warn(`[Pêche Mignon] Ajout membre au ticket (essai ${i + 1}):`, err?.message || err);
+      console.warn(`[Péché Mignon] Ajout membre au ticket (essai ${i + 1}):`, err?.message || err);
     }
     await wait(350 * (i + 1));
   }
@@ -348,7 +348,7 @@ async function showTicketSubjectModal(interaction, typeId) {
   try {
     await interaction.showModal(modal);
   } catch (err) {
-    console.error(`[Pêche Mignon] Ticket showModal (${meta.id}):`, err?.message || err);
+    console.error(`[Péché Mignon] Ticket showModal (${meta.id}):`, err?.message || err);
     if (!interaction.replied && !interaction.deferred) {
       return interaction
         .reply({
@@ -362,7 +362,7 @@ async function showTicketSubjectModal(interaction, typeId) {
 
 export async function handleTicketOpenButton(interaction) {
   const typeId = String(interaction.customId || '').replace('ticket_open_', '');
-  console.log(`[Pêche Mignon] Ticket bouton: ${typeId} user=${interaction.user?.id}`);
+  console.log(`[Péché Mignon] Ticket bouton: ${typeId} user=${interaction.user?.id}`);
   return showTicketSubjectModal(interaction, typeId);
 }
 
@@ -457,7 +457,7 @@ export async function handleTicketModalSubmit(interaction) {
       reason: `Ticket ${meta.label} — ${interaction.user.tag}`,
     });
   } catch (err) {
-    console.error("[Pêche Mignon] Création thread ticket:", err?.message || err);
+    console.error("[Péché Mignon] Création thread ticket:", err?.message || err);
     const code = err?.code ?? err?.rawError?.code;
     const atCap = code === 30033 || /maximum number of active threads/i.test(String(err?.message || ''));
     return interaction.editReply({
@@ -469,7 +469,7 @@ export async function handleTicketModalSubmit(interaction) {
 
   const added = await addMemberToTicketThread(thread, interaction.user.id);
   if (!added) {
-    console.warn(`[Pêche Mignon] Ticket: membre ${interaction.user.id} non ajouté au fil ${thread.id}`);
+    console.warn(`[Péché Mignon] Ticket: membre ${interaction.user.id} non ajouté au fil ${thread.id}`);
   }
 
   const ping = staffPingContent();
@@ -496,7 +496,7 @@ export async function handleTicketModalSubmit(interaction) {
       panelMessageId: intro.id,
     });
   } catch (err) {
-    console.error("[Pêche Mignon] Message initial ticket:", err?.message || err);
+    console.error("[Péché Mignon] Message initial ticket:", err?.message || err);
     return interaction.editReply({ content: `❌ Fil créé (<#${thread.id}>) mais le message d’accueil a échoué.` });
   }
 
@@ -656,14 +656,14 @@ export async function handleTicketCloseModal(interaction) {
       closeReason,
     });
   } catch (err) {
-    console.warn("[Pêche Mignon] Transcript ticket:", err?.message || err);
+    console.warn("[Péché Mignon] Transcript ticket:", err?.message || err);
   }
 
   try {
     await thread.setLocked(true, `Ticket fermé par ${interaction.user.tag}`);
     await thread.setArchived(true, `Ticket fermé par ${interaction.user.tag}`);
   } catch (err) {
-    console.warn("[Pêche Mignon] Archivage ticket:", err?.message || err);
+    console.warn("[Péché Mignon] Archivage ticket:", err?.message || err);
   }
 
   return interaction.editReply({ content: '✅ Ticket fermé. La phrase de clôture figure dans le transcript.' });

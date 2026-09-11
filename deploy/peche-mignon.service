@@ -1,5 +1,5 @@
 [Unit]
-Description=Pêche Mignon Discord bot
+Description=Péché Mignon Discord bot
 After=network-online.target
 Wants=network-online.target
 

@@ -74,7 +74,7 @@ async function sendConfessionStaffLog({
       allowedMentions: { users: [user.id] },
     });
   } catch (err) {
-    console.error(`[Pêche Mignon] /${logContext} log staff:`, err?.message || err);
+    console.error(`[Péché Mignon] /${logContext} log staff:`, err?.message || err);
   }
 }
 
@@ -306,7 +306,7 @@ export async function handleConfession(interaction) {
   try {
     confessionNo = await incrementConfessionNumber(guild.id, channel.id);
   } catch (e) {
-    console.error("[Pêche Mignon] /confession numéro:", e?.message || e);
+    console.error("[Péché Mignon] /confession numéro:", e?.message || e);
   }
 
   const confessionBody = escapeMarkdown(text.slice(0, 4096));
@@ -334,7 +334,7 @@ export async function handleConfession(interaction) {
       });
     }
   } catch (e) {
-    console.error("[Pêche Mignon] /confession envoi:", e?.message || e);
+    console.error("[Péché Mignon] /confession envoi:", e?.message || e);
     return interaction.editReply({ content: `❌ Impossible d’envoyer la confession : ${e?.message || 'erreur'}` });
   }
 
@@ -346,7 +346,7 @@ export async function handleConfession(interaction) {
       autoArchiveDuration: ThreadAutoArchiveDuration.OneDay,
     });
   } catch (e) {
-    console.warn("[Pêche Mignon] /confession fil: création impossible:", e?.message || e);
+    console.warn("[Péché Mignon] /confession fil: création impossible:", e?.message || e);
   }
 
   const originChannelLabel = (channel.name || 'salon inconnu').slice(0, 200);
@@ -452,7 +452,7 @@ export async function handleConfessionReponse(interaction) {
       allowedMentions: { parse: [] },
     });
   } catch (e) {
-    console.error("[Pêche Mignon] /confession-réponse envoi:", e?.message || e);
+    console.error("[Péché Mignon] /confession-réponse envoi:", e?.message || e);
     return interaction.editReply({ content: `❌ Impossible d’envoyer la réponse anonyme : ${e?.message || 'erreur'}` });
   }
 

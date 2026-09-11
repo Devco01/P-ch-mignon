@@ -328,13 +328,13 @@ export async function sendBanAppealDmToBannedUser(client, guild, userId, reason,
     const guildIcon = guild.iconURL({ extension: 'png', size: 256 });
     if (guildIcon) embed.setThumbnail(guildIcon);
     await user.send({ embeds: [embed] });
-    console.log(`[Pêche Mignon] MP ban envoyé à l'utilisateur ${userId}.`);
+    console.log(`[Péché Mignon] MP ban envoyé à l'utilisateur ${userId}.`);
   } catch (err) {
     if (err?.code === 50007) {
-      console.warn(`[Pêche Mignon] MP ban impossible (DMs fermés) pour ${userId}.`);
+      console.warn(`[Péché Mignon] MP ban impossible (DMs fermés) pour ${userId}.`);
       return;
     }
-    console.warn(`[Pêche Mignon] MP ban échoué pour ${userId}:`, err?.message || err);
+    console.warn(`[Péché Mignon] MP ban échoué pour ${userId}:`, err?.message || err);
   }
 }
 
@@ -364,7 +364,7 @@ export async function sendBanSignalement(client, options) {
   try {
     const channel = await client.channels.fetch(channelId).catch(() => null);
     if (!channel?.isTextBased?.()) {
-      console.warn(`[Pêche Mignon] Salon signalements introuvable: ${channelId}`);
+      console.warn(`[Péché Mignon] Salon signalements introuvable: ${channelId}`);
       return { posted: false };
     }
     const embed = buildBanSignalementEmbed(client, options);
@@ -385,12 +385,12 @@ export async function sendBanSignalement(client, options) {
     });
 
     if (!thread) {
-      console.warn(`[Pêche Mignon] Signalement posté sans fil de preuves (user ${options.userId}).`);
+      console.warn(`[Péché Mignon] Signalement posté sans fil de preuves (user ${options.userId}).`);
     }
 
     return { posted: true, threadId: thread?.id || null, messageId: message.id };
   } catch (err) {
-    console.warn(`[Pêche Mignon] Envoi signalement ban échoué:`, err?.message || err);
+    console.warn(`[Péché Mignon] Envoi signalement ban échoué:`, err?.message || err);
     return { posted: false };
   }
 }
@@ -504,7 +504,7 @@ export async function handleBan(interaction) {
 
     return interaction.editReply({ content, embeds: [embed] });
   } catch (err) {
-    console.error("[Pêche Mignon] Erreur handleBan:", err);
+    console.error("[Péché Mignon] Erreur handleBan:", err);
     return replyBanError(`❌ ${formatBanApiError(err)}`);
   }
 }

@@ -1,11 +1,14 @@
 import { PermissionFlagsBits, parseEmoji, ThreadAutoArchiveDuration } from 'discord.js';
-import { config } from './config.js';
+import { config, isAutoMediaCategoryChannel } from './config.js';
 
 const MEDIA_ATTACHMENT_EXT = /\.(png|jpe?g|gif|webp|bmp|heic|heif|mp4|mov|webm)$/i;
 const recentlyHandled = new Set();
 
 /** Ordre des réactions auto (IDs ou URL CDN, y compris animated=true). */
-function selfieReactionList() {
+function selfieReactionList(message) {
+  if (isAutoMediaCategoryChannel(message?.channel) && config.categoryReactionIds?.length) {
+    return config.categoryReactionIds;
+  }
   return config.selfieReactionIds || [];
 }
 
@@ -56,10 +59,9 @@ function messageHasImage(message) {
 }
 
 function isSelfieParentChannel(message) {
-  const ids = config.selfieChannelIds;
-  if (!ids?.size) return false;
   if (typeof message.channel?.isThread === 'function' && message.channel.isThread()) return false;
-  return ids.has(message.channelId);
+  if (config.selfieChannelIds?.has(message.channelId)) return true;
+  return isAutoMediaCategoryChannel(message.channel);
 }
 
 function selfieThreadName(message) {
@@ -84,7 +86,7 @@ async function ensureSelfieThread(message, me) {
   if (me && channel && typeof me.permissionsIn === 'function') {
     const perms = me.permissionsIn(channel);
     if (perms && !perms.has(PermissionFlagsBits.CreatePublicThreads)) {
-      console.warn(`[Pêche Mignon] selfie: permission « Créer des fils publics » manquante sur ${message.channelId}.`);
+      console.warn(`[Péché Mignon] selfie: permission « Créer des fils publics » manquante sur ${message.channelId}.`);
       return null;
     }
   }
@@ -98,13 +100,13 @@ async function ensureSelfieThread(message, me) {
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       const thread = await message.startThread(opts);
-      console.log(`[Pêche Mignon] selfie fil créé sous ${message.id}: ${thread.id}`);
+      console.log(`[Péché Mignon] selfie fil créé sous ${message.id}: ${thread.id}`);
       return thread;
     } catch (err) {
       const recovered = await resolveExistingThread(await message.fetch?.().catch(() => message));
       if (recovered) return recovered;
       if (attempt >= 2) {
-        console.warn(`[Pêche Mignon] selfie fil impossible (${message.id}):`, err?.message || err);
+        console.warn(`[Péché Mignon] selfie fil impossible (${message.id}):`, err?.message || err);
         return null;
       }
       await wait(400 * (attempt + 1));
@@ -135,19 +137,19 @@ async function resolveReactEmoji(guild, parsed) {
 }
 
 async function addSelfieReactions(message, me) {
-  const reactions = selfieReactionList();
+  const reactions = selfieReactionList(message);
   if (!reactions?.length || !message.react) return;
 
   const channel = message.channel;
   if (me && channel && typeof me.permissionsIn === 'function') {
     const perms = me.permissionsIn(channel);
     if (perms && !perms.has(PermissionFlagsBits.AddReactions)) {
-      console.warn(`[Pêche Mignon] selfie: permission « Ajouter des réactions » manquante sur ${message.channelId}.`);
+      console.warn(`[Péché Mignon] selfie: permission « Ajouter des réactions » manquante sur ${message.channelId}.`);
       return;
     }
   }
 
-  console.log(`[Pêche Mignon] selfie réactions (ordre) sur ${message.id}: ${reactions.join(' → ')}`);
+  console.log(`[Péché Mignon] selfie réactions (ordre) sur ${message.id}: ${reactions.join(' → ')}`);
 
   for (let i = 0; i < reactions.length; i++) {
     const raw = reactions[i];
@@ -158,7 +160,7 @@ async function addSelfieReactions(message, me) {
       await message.react(emoji);
       if (i < reactions.length - 1) await wait(400);
     } catch (e) {
-      console.warn(`[Pêche Mignon] selfie réaction impossible (${raw}):`, e?.message || e);
+      console.warn(`[Péché Mignon] selfie réaction impossible (${raw}):`, e?.message || e);
     }
   }
 }
@@ -179,22 +181,25 @@ export async function handleSelfieChannelReaction(message) {
 /** Discord archive forcément les fils inactifs : on les rouvre tout de suite. */
 export async function keepSelfieThreadOpen(_oldThread, newThread) {
   const thread = newThread;
-  if (!thread?.parentId || !config.selfieChannelIds.has(thread.parentId)) return;
+  if (!thread?.parentId) return;
+  const parent = thread.parent ?? (await thread.guild?.channels?.fetch?.(thread.parentId).catch(() => null));
+  const keep =
+    config.selfieChannelIds.has(thread.parentId) || isAutoMediaCategoryChannel(parent);
+  if (!keep) return;
   if (!thread.archived) return;
   if (thread.locked) return;
 
   try {
     const me = thread.guild?.members?.me;
-    const parent = thread.parent ?? (await thread.guild?.channels?.fetch?.(thread.parentId).catch(() => null));
     if (me && parent && typeof me.permissionsIn === 'function') {
       const perms = me.permissionsIn(parent);
       if (perms && !perms.has(PermissionFlagsBits.ManageThreads)) {
-        console.warn(`[Pêche Mignon] selfie: permission « Gérer les fils » manquante pour désarchiver ${thread.id}.`);
+        console.warn(`[Péché Mignon] selfie: permission « Gérer les fils » manquante pour désarchiver ${thread.id}.`);
         return;
       }
     }
     await thread.setArchived(false, 'Les fils selfies restent ouverts.');
   } catch (err) {
-    console.warn(`[Pêche Mignon] selfie désarchivage impossible (${thread.id}):`, err?.message || err);
+    console.warn(`[Péché Mignon] selfie désarchivage impossible (${thread.id}):`, err?.message || err);
   }
 }

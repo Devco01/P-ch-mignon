@@ -152,7 +152,7 @@ export async function handleInformations(interaction) {
   try {
     await channel.send(payload);
   } catch (err) {
-    console.error("[Pêche Mignon] /informations envoi:", err?.message || err);
+    console.error("[Péché Mignon] /informations envoi:", err?.message || err);
     return interaction.reply({
       content: `❌ Impossible de poster les informations : ${err?.message || 'erreur'}`,
       flags: MessageFlags.Ephemeral,

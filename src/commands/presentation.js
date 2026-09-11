@@ -240,7 +240,7 @@ function showPresentationModal(interaction, modal) {
   try {
     return interaction.showModal(modal);
   } catch (e) {
-    console.error("[Pêche Mignon] présentation: showModal échoué:", e?.message || e);
+    console.error("[Péché Mignon] présentation: showModal échoué:", e?.message || e);
     return interaction.reply({ content: '❌ Impossible d’ouvrir le formulaire (modal).', flags: MessageFlags.Ephemeral });
   }
 }
@@ -459,7 +459,7 @@ async function addPresentationPostReactions(message, guild) {
   const channel = message.channel;
   const me = guild?.members?.me ?? (guild && channel ? await guild.members.fetchMe().catch(() => null) : null);
   if (me && channel && !me.permissionsIn(channel).has(PermissionFlagsBits.AddReactions)) {
-    console.warn(`[Pêche Mignon] présentation: permission « Ajouter des réactions » manquante sur ${channel.id}.`);
+    console.warn(`[Péché Mignon] présentation: permission « Ajouter des réactions » manquante sur ${channel.id}.`);
     return;
   }
   for (let i = 0; i < reactions.length; i++) {
@@ -471,7 +471,7 @@ async function addPresentationPostReactions(message, guild) {
       await message.react(emoji);
       if (i < reactions.length - 1) await new Promise((r) => setTimeout(r, 400));
     } catch (e) {
-      console.warn(`[Pêche Mignon] présentation réaction « ${raw} » impossible:`, e?.message || e);
+      console.warn(`[Péché Mignon] présentation réaction « ${raw} » impossible:`, e?.message || e);
     }
   }
 }
@@ -767,7 +767,7 @@ export async function handlePresentationButton(interaction) {
         sent = true;
       }
     } catch (e) {
-      console.error("[Pêche Mignon] présentation: envoi embed final échoué:", e?.message || e);
+      console.error("[Péché Mignon] présentation: envoi embed final échoué:", e?.message || e);
       try {
         if (interaction.guild?.id && interaction.user?.id) {
           await deletePresentationMessage(interaction.guild.id, interaction.user.id, 'generale').catch(() => {});

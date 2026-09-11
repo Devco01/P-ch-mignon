@@ -182,7 +182,7 @@ export async function handleReglement(interaction) {
       allowedMentions: { parse: [] },
     });
   } catch (err) {
-    console.error("[Pêche Mignon] /règlement envoi:", err?.message || err);
+    console.error("[Péché Mignon] /règlement envoi:", err?.message || err);
     return interaction.reply({
       content: `❌ Impossible de poster le règlement : ${err?.message || 'erreur'}`,
       flags: MessageFlags.Ephemeral,
@@ -248,7 +248,7 @@ export async function handleReglementButton(interaction) {
   try {
     await member.roles.add(role, 'Règlement lu et approuvé');
   } catch (err) {
-    console.error("[Pêche Mignon] règlement rôle:", err?.message || err);
+    console.error("[Péché Mignon] règlement rôle:", err?.message || err);
     return interaction.reply({
       content: `❌ Impossible de t’attribuer le rôle : ${err?.message || 'erreur'}`,
       flags: MessageFlags.Ephemeral,

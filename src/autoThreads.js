@@ -1,5 +1,5 @@
 import { PermissionFlagsBits, ThreadAutoArchiveDuration } from 'discord.js';
-import { config } from './config.js';
+import { config, isAutoMediaCategoryChannel } from './config.js';
 
 const MEDIA_ATTACHMENT_EXT = /\.(png|jpe?g|gif|webp|bmp|heic|heif|mp4|mov|webm)$/i;
 const URL_IN_TEXT = /(?:https?:\/\/|www\.)[^\s<]+|discord\.gg\/[^\s<]+/i;
@@ -18,10 +18,9 @@ function rememberHandled(messageId) {
 }
 
 function isAutoThreadParentChannel(message) {
-  const ids = config.autoThreadChannelIds;
-  if (!ids?.size) return false;
   if (typeof message.channel?.isThread === 'function' && message.channel.isThread()) return false;
-  return ids.has(message.channelId);
+  if (config.autoThreadChannelIds?.has(message.channelId)) return true;
+  return isAutoMediaCategoryChannel(message.channel);
 }
 
 function messageHasImageOrVideo(message) {
@@ -72,7 +71,7 @@ async function ensureThread(message, me) {
   if (me && channel && typeof me.permissionsIn === 'function') {
     const perms = me.permissionsIn(channel);
     if (perms && !perms.has(PermissionFlagsBits.CreatePublicThreads)) {
-      console.warn(`[Pêche Mignon] auto-fil: permission « Créer des fils publics » manquante sur ${message.channelId}.`);
+      console.warn(`[Péché Mignon] auto-fil: permission « Créer des fils publics » manquante sur ${message.channelId}.`);
       return null;
     }
   }
@@ -86,13 +85,13 @@ async function ensureThread(message, me) {
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       const thread = await message.startThread(opts);
-      console.log(`[Pêche Mignon] auto-fil créé sous ${message.id}: ${thread.id}`);
+      console.log(`[Péché Mignon] auto-fil créé sous ${message.id}: ${thread.id}`);
       return thread;
     } catch (err) {
       const recovered = await resolveExistingThread(await message.fetch?.().catch(() => message));
       if (recovered) return recovered;
       if (attempt >= 2) {
-        console.warn(`[Pêche Mignon] auto-fil impossible (${message.id}):`, err?.message || err);
+        console.warn(`[Péché Mignon] auto-fil impossible (${message.id}):`, err?.message || err);
         return null;
       }
       await wait(400 * (attempt + 1));
@@ -115,22 +114,25 @@ export async function handleAutoThreadMessage(message) {
 
 export async function keepAutoThreadOpen(_oldThread, newThread) {
   const thread = newThread;
-  if (!thread?.parentId || !config.autoThreadChannelIds.has(thread.parentId)) return;
+  if (!thread?.parentId) return;
+  const parent = thread.parent ?? (await thread.guild?.channels?.fetch?.(thread.parentId).catch(() => null));
+  const keep =
+    config.autoThreadChannelIds.has(thread.parentId) || isAutoMediaCategoryChannel(parent);
+  if (!keep) return;
   if (!thread.archived) return;
   if (thread.locked) return;
 
   try {
     const me = thread.guild?.members?.me;
-    const parent = thread.parent ?? (await thread.guild?.channels?.fetch?.(thread.parentId).catch(() => null));
     if (me && parent && typeof me.permissionsIn === 'function') {
       const perms = me.permissionsIn(parent);
       if (perms && !perms.has(PermissionFlagsBits.ManageThreads)) {
-        console.warn(`[Pêche Mignon] auto-fil: permission « Gérer les fils » manquante pour désarchiver ${thread.id}.`);
+        console.warn(`[Péché Mignon] auto-fil: permission « Gérer les fils » manquante pour désarchiver ${thread.id}.`);
         return;
       }
     }
     await thread.setArchived(false, 'Les fils automatiques restent ouverts.');
   } catch (err) {
-    console.warn(`[Pêche Mignon] auto-fil désarchivage impossible (${thread.id}):`, err?.message || err);
+    console.warn(`[Péché Mignon] auto-fil désarchivage impossible (${thread.id}):`, err?.message || err);
   }
 }

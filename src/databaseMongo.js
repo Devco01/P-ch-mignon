@@ -316,7 +316,7 @@ export async function tryAcquireInteraction(interactionId) {
     return (r?.upsertedCount ?? 0) > 0;
   } catch (e) {
     if (e?.code === 11000) return false;
-    console.warn(`[Pêche Mignon] Dedup interaction:`, e?.message || e);
+    console.warn(`[Péché Mignon] Dedup interaction:`, e?.message || e);
     return true;
   }
 }

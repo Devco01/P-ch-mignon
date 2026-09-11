@@ -1,4 +1,4 @@
-# Pêche Mignon — Bot Discord
+# Péché Mignon — Bot Discord
 
 Bot Discord en Node.js (même architecture que L’éphémère) pour :
 
@@ -7,10 +7,7 @@ Bot Discord en Node.js (même architecture que L’éphémère) pour :
 - **Tickets** : fils **privés** dans un salon `#ticket` (pas de nouveau salon à chaque ticket)
 - **Confessions**, **règlement**, **informations**, réactions selfies / auto-fils
 
-Couleurs des embeds (surchargeables via `.env`) :
-
-- Sanctions (`ban`, `unban`, `warn`, `unwarn`) : `#ef233c`
-- Autres (présentation, tickets, analyse) : `#F6B3CE`
+Couleur des embeds : `#C8102E` (`EMBED_COLOR_SANCTION` / `EMBED_COLOR_OTHER`).
 
 ## Prérequis
 
@@ -69,6 +66,12 @@ Le staff doit avoir **Gérer les fils** sur le salon `#ticket` pour voir tous le
 
 Un membre ne peut avoir **qu’un ticket ouvert** à la fois.
 
+## Auto-fil et auto-react
+
+- `SELFIE_CHANNEL_IDS` + `SELFIE_REACTION_IDS` : salons hors catégories (images → fil + 4 réactions).
+- `AUTO_THREAD_CHANNEL_IDS` : salons avec fil sous image / lien.
+- `AUTO_MEDIA_CATEGORY_IDS` : **tous** les salons de ces catégories ont fil + réactions `CATEGORY_REACTION_IDS`.
+
 ## Base de données
 
 - Sans `MONGODB_URI` : SQLite dans `data/peche-mignon.db`
@@ -120,7 +123,7 @@ Tu dois voir `active (running)`. Vérifie que L’éphémère n’a pas bougé :
 systemctl status ephemere --no-pager
 ```
 
-Logs Pêche Mignon :
+Logs Péché Mignon :
 
 ```bash
 journalctl -u peche-mignon -f
@@ -136,7 +139,7 @@ Node et Git sont déjà là. En root, **sans toucher** à `/home/ephemere` :
 id pechemignon || adduser --disabled-password --gecos "" pechemignon
 su - pechemignon -c 'git clone https://github.com/Devco01/P-ch-mignon.git /home/pechemignon/bot && cd /home/pechemignon/bot && npm install'
 cp /home/pechemignon/bot/deploy/peche-mignon.service /etc/systemd/system/peche-mignon.service
-# Créer /home/pechemignon/bot/.env (token Pêche Mignon + même MONGODB_URI que L’éphémère)
+# Créer /home/pechemignon/bot/.env (token Péché Mignon + même MONGODB_URI que L’éphémère)
 # Ne pas modifier /home/ephemere/bot/.env
 chown pechemignon:pechemignon /home/pechemignon/bot/.env
 chmod 600 /home/pechemignon/bot/.env
@@ -158,7 +161,7 @@ Colle la même ligne dans `/home/pechemignon/bot/.env`. Le code écrit dans la b
 
 ### 4. Changer un secret / un ID (token, rôles, salon ticket)
 
-Sur le VPS seulement, fichier **Pêche Mignon** :
+Sur le VPS seulement, fichier **Péché Mignon** :
 
 ```bash
 nano /home/pechemignon/bot/.env
@@ -169,25 +172,25 @@ systemctl restart peche-mignon
 
 | Action | Commande |
 |---|---|
-| État Pêche Mignon | `systemctl status peche-mignon` |
+| État Péché Mignon | `systemctl status peche-mignon` |
 | État L’éphémère (ne pas stopper) | `systemctl status ephemere` |
-| Logs Pêche Mignon | `journalctl -u peche-mignon -n 100 --no-pager` |
-| Redémarrer Pêche Mignon | `systemctl restart peche-mignon` |
-| Arrêter Pêche Mignon | `systemctl stop peche-mignon` |
-| Relancer Pêche Mignon | `systemctl start peche-mignon` |
+| Logs Péché Mignon | `journalctl -u peche-mignon -n 100 --no-pager` |
+| Redémarrer Péché Mignon | `systemctl restart peche-mignon` |
+| Arrêter Péché Mignon | `systemctl stop peche-mignon` |
+| Relancer Péché Mignon | `systemctl start peche-mignon` |
 | SSH | `ssh -i $env:USERPROFILE\.ssh\id_ed25519_hetzner root@178.105.55.152` |
 
 Chemins serveur :
 
-- Pêche Mignon : `/home/pechemignon/bot`
+- Péché Mignon : `/home/pechemignon/bot`
 - L’éphémère (ne pas modifier pour ce bot) : `/home/ephemere/bot`
-- Secrets Pêche Mignon : `/home/pechemignon/bot/.env`
-- Service Pêche Mignon : `/etc/systemd/system/peche-mignon.service`
+- Secrets Péché Mignon : `/home/pechemignon/bot/.env`
+- Service Péché Mignon : `/etc/systemd/system/peche-mignon.service`
 - Service L’éphémère : `/etc/systemd/system/ephemere.service`
 
 ### 6. Ne pas faire
 
-- `systemctl restart ephemere` / `stop ephemere` / éditer `/home/ephemere/bot` pour installer Pêche Mignon.
+- `systemctl restart ephemere` / `stop ephemere` / éditer `/home/ephemere/bot` pour installer Péché Mignon.
 - Lancer `npm start` à la main **en plus** de systemd (deux instances = commandes en double).
 - Copier le `.env` local par-dessus GitHub.
 - Modifier les fichiers **uniquement** sur le VPS : au prochain `git pull`, tes changements serveur seront écrasés.

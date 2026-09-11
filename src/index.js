@@ -81,11 +81,11 @@ let hasInstanceLock = false;
 async function syncBotAvatarWithGuild(client) {
   const guild = (config.guildId && client.guilds.cache.get(config.guildId)) || client.guilds.cache.first();
   if (!guild) {
-    console.warn("[Pêche Mignon] Avatar: aucun serveur pour copier l’icône.");
+    console.warn("[Péché Mignon] Avatar: aucun serveur pour copier l’icône.");
     return;
   }
   if (!guild.icon) {
-    console.warn("[Pêche Mignon] Avatar: le serveur n’a pas d’icône.");
+    console.warn("[Péché Mignon] Avatar: le serveur n’a pas d’icône.");
     return;
   }
 
@@ -103,9 +103,9 @@ async function syncBotAvatarWithGuild(client) {
     await client.user.setAvatar(iconURL);
     fs.mkdirSync(path.dirname(AVATAR_SYNC_PATH), { recursive: true });
     fs.writeFileSync(AVATAR_SYNC_PATH, JSON.stringify({ guildId: guild.id, iconHash: guild.icon }));
-    console.log("[Pêche Mignon] Photo de profil alignée sur l’icône du serveur.");
+    console.log("[Péché Mignon] Photo de profil alignée sur l’icône du serveur.");
   } catch (e) {
-    console.warn("[Pêche Mignon] Changement de photo de profil impossible:", e?.message || e);
+    console.warn("[Péché Mignon] Changement de photo de profil impossible:", e?.message || e);
   }
 }
 
@@ -116,7 +116,7 @@ async function safeReleaseInstanceLock(reason) {
   } catch (_) {}
   try {
     await releaseInstanceLock(INSTANCE_LOCK_KEY, instanceOwner);
-    console.warn(`[Pêche Mignon] Instance lock libéré (${reason}) (key=${INSTANCE_LOCK_KEY}).`);
+    console.warn(`[Péché Mignon] Instance lock libéré (${reason}) (key=${INSTANCE_LOCK_KEY}).`);
   } catch (_) {}
   hasInstanceLock = false;
 }
@@ -149,7 +149,7 @@ setInterval(() => {
   try {
     const m = process.memoryUsage();
     const mb = (n) => Math.round((n / 1024 / 1024) * 10) / 10;
-    console.log(`[Pêche Mignon] RAM rss=${mb(m.rss)}MB heapUsed=${mb(m.heapUsed)}MB heapTotal=${mb(m.heapTotal)}MB`);
+    console.log(`[Péché Mignon] RAM rss=${mb(m.rss)}MB heapUsed=${mb(m.heapUsed)}MB heapTotal=${mb(m.heapTotal)}MB`);
   } catch (_) {}
 }, 10 * 60 * 1000);
 
@@ -212,7 +212,7 @@ async function sendInteractionFallback(interaction, payload, context) {
   } catch (_) {}
   try {
     const dmText = channelPayload.content || `Réponse indisponible dans le salon (${context}).`;
-    await interaction.user.send(`Pêche Mignon: ${dmText}`);
+    await interaction.user.send(`Péché Mignon: ${dmText}`);
   } catch (_) {}
 }
 
@@ -228,7 +228,7 @@ function attachResilientInteractionHandlers(interaction) {
     try {
       return await baseReply(payload);
     } catch (err) {
-      console.error("[Pêche Mignon] interaction.reply échoué:", err?.message || err);
+      console.error("[Péché Mignon] interaction.reply échoué:", err?.message || err);
       if (shouldSkipFallbackForError(err)) return null;
       await sendInteractionFallback(interaction, payload, 'reply');
       return null;
@@ -239,7 +239,7 @@ function attachResilientInteractionHandlers(interaction) {
     try {
       return await baseEditReply(payload);
     } catch (err) {
-      console.error("[Pêche Mignon] interaction.editReply échoué:", err?.message || err);
+      console.error("[Péché Mignon] interaction.editReply échoué:", err?.message || err);
       if (shouldSkipFallbackForError(err)) return null;
       await sendInteractionFallback(interaction, payload, 'editReply');
       return null;
@@ -250,7 +250,7 @@ function attachResilientInteractionHandlers(interaction) {
     try {
       return await baseFollowUp(payload);
     } catch (err) {
-      console.error("[Pêche Mignon] interaction.followUp échoué:", err?.message || err);
+      console.error("[Péché Mignon] interaction.followUp échoué:", err?.message || err);
       if (shouldSkipFallbackForError(err)) return null;
       await sendInteractionFallback(interaction, payload, 'followUp');
       return null;
@@ -275,60 +275,65 @@ client.once(Events.ClientReady, async (c) => {
       activities: [],
     });
   } catch (e) {
-    console.warn("[Pêche Mignon] Définition de la présence impossible:", e?.message || e);
+    console.warn("[Péché Mignon] Définition de la présence impossible:", e?.message || e);
   }
 
   try {
     await syncBotAvatarWithGuild(c);
   } catch (e) {
-    console.warn("[Pêche Mignon] Synchronisation de l’avatar impossible:", e?.message || e);
+    console.warn("[Péché Mignon] Synchronisation de l’avatar impossible:", e?.message || e);
   }
 
   startRateLimitCleanup();
   try {
     await registerCommands();
     const scope = config.guildId ? `serveur ${config.guildId}` : 'tous les serveurs (global)';
-    console.log(`[Pêche Mignon] Slash commands enregistrées pour ${scope}`);
+    console.log(`[Péché Mignon] Slash commands enregistrées pour ${scope}`);
   } catch (e) {
-    console.error("[Pêche Mignon] Erreur enregistrement commandes:", e.message);
+    console.error("[Péché Mignon] Erreur enregistrement commandes:", e.message);
   }
-  console.log(`[Pêche Mignon] Connecté en tant que ${c.user.tag} (instance=${instanceId} pid=${process.pid})`);
+  console.log(`[Péché Mignon] Connecté en tant que ${c.user.tag} (instance=${instanceId} pid=${process.pid})`);
   if (config.useGuildMembersIntent) {
-    console.log("[Pêche Mignon] Intent Guild Members activé → autocomplétion /ban /warn et /analyse.");
+    console.log("[Péché Mignon] Intent Guild Members activé → autocomplétion /ban /warn et /analyse.");
   } else {
-    console.log("[Pêche Mignon] Intent Guild Members désactivé. Active-le dans le Developer Portal puis GUILD_MEMBERS_INTENT=true.");
+    console.log("[Péché Mignon] Intent Guild Members désactivé. Active-le dans le Developer Portal puis GUILD_MEMBERS_INTENT=true.");
   }
   if (config.useMessageContentIntent) {
-    console.log("[Pêche Mignon] Intent Message Content activé → texte des preuves dans les fils de signalement.");
+    console.log("[Péché Mignon] Intent Message Content activé → texte des preuves dans les fils de signalement.");
   } else {
-    console.log("[Pêche Mignon] Intent Message Content désactivé. Les preuves images/fichiers sont enregistrées, pas le texte.");
+    console.log("[Péché Mignon] Intent Message Content désactivé. Les preuves images/fichiers sont enregistrées, pas le texte.");
   }
   const selfieIds = [...(config.selfieChannelIds || [])];
+  const categoryIds = [...(config.autoMediaCategoryIds || [])];
   if (selfieIds.length) {
-    console.log(`[Pêche Mignon] Selfies / OOTD actifs sur ${selfieIds.length} salon(s): ${selfieIds.join(', ')}`);
-  } else {
-    console.warn("[Pêche Mignon] Selfies / OOTD inactifs: SELFIE_CHANNEL_IDS est vide dans le .env.");
+    console.log(`[Péché Mignon] Selfies / OOTD actifs sur ${selfieIds.length} salon(s): ${selfieIds.join(', ')}`);
+  }
+  if (categoryIds.length) {
+    console.log(`[Péché Mignon] Auto-fil + auto-react sur ${categoryIds.length} catégorie(s): ${categoryIds.join(', ')}`);
+  }
+  if (!selfieIds.length && !categoryIds.length) {
+    console.warn("[Péché Mignon] Selfies / OOTD inactifs: SELFIE_CHANNEL_IDS et AUTO_MEDIA_CATEGORY_IDS sont vides.");
   }
   const autoThreadIds = [...(config.autoThreadChannelIds || [])];
   if (autoThreadIds.length) {
-    console.log(`[Pêche Mignon] Auto-fils (images/liens) actifs sur ${autoThreadIds.length} salon(s): ${autoThreadIds.join(', ')}`);
+    console.log(`[Péché Mignon] Auto-fils (images/liens) actifs sur ${autoThreadIds.length} salon(s): ${autoThreadIds.join(', ')}`);
   }
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
   if (isDuplicateInteraction(interaction.id)) {
-    console.warn(`[Pêche Mignon] Interaction doublon ignorée: id=${interaction.id}`);
+    console.warn(`[Péché Mignon] Interaction doublon ignorée: id=${interaction.id}`);
     return;
   }
 
   try {
     const acquired = await tryAcquireInteraction(interaction.id);
     if (!acquired) {
-      console.warn(`[Pêche Mignon] Interaction doublon (DB) ignorée: id=${interaction.id}`);
+      console.warn(`[Péché Mignon] Interaction doublon (DB) ignorée: id=${interaction.id}`);
       return;
     }
   } catch (err) {
-    console.error(`[Pêche Mignon] Interaction dedup indisponible → on continue: id=${interaction.id}`, err?.message || err);
+    console.error(`[Péché Mignon] Interaction dedup indisponible → on continue: id=${interaction.id}`, err?.message || err);
   }
 
   try {
@@ -390,7 +395,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     }
 
     if (!interaction.isChatInputCommand()) return;
-    console.log(`[Pêche Mignon] Commande reçue: /${interaction.commandName} (user: ${interaction.user?.id})`);
+    console.log(`[Péché Mignon] Commande reçue: /${interaction.commandName} (user: ${interaction.user?.id})`);
     switch (interaction.commandName) {
       case 'ban':
         await handleBan(interaction);
@@ -433,7 +438,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         await interaction.reply({ content: 'Commande inconnue.', flags: MessageFlags.Ephemeral });
     }
   } catch (err) {
-    console.error("[Pêche Mignon] Erreur interaction:", err);
+    console.error("[Péché Mignon] Erreur interaction:", err);
     if (interaction.__peche_mignon_fallback_sent) return;
     const payload = { content: '❌ Une erreur est survenue.', flags: MessageFlags.Ephemeral };
     try {
@@ -443,14 +448,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
   }
 });
 
-client.on(Events.Error, (err) => console.error("[Pêche Mignon] Client error:", err));
+client.on(Events.Error, (err) => console.error("[Péché Mignon] Client error:", err));
 
 client.on(Events.MessageBulkDelete, async (messages, channel) => {
   try {
     const ch = channel ?? messages.first()?.channel;
     await handlePresentationChannelBulkDelete(ch, messages?.size ?? 0);
   } catch (err) {
-    console.error("[Pêche Mignon] Erreur purge présentations (bulk delete):", err?.message || err);
+    console.error("[Péché Mignon] Erreur purge présentations (bulk delete):", err?.message || err);
   }
 });
 
@@ -458,7 +463,7 @@ client.on(Events.ChannelDelete, async (channel) => {
   try {
     await handlePresentationChannelDelete(channel);
   } catch (err) {
-    console.error("[Pêche Mignon] Erreur purge présentations (salon supprimé):", err?.message || err);
+    console.error("[Péché Mignon] Erreur purge présentations (salon supprimé):", err?.message || err);
   }
 });
 
@@ -466,17 +471,17 @@ client.on(Events.MessageCreate, async (message) => {
   try {
     await persistBanProofMessage(message, { replace: false });
   } catch (err) {
-    console.error("[Pêche Mignon] Erreur enregistrement preuve:", err?.message || err);
+    console.error("[Péché Mignon] Erreur enregistrement preuve:", err?.message || err);
   }
   try {
     await handleSelfieChannelReaction(message);
   } catch (err) {
-    console.error("[Pêche Mignon] Erreur réactions salon selfie:", err?.message || err);
+    console.error("[Péché Mignon] Erreur réactions salon selfie:", err?.message || err);
   }
   try {
     await handleAutoThreadMessage(message);
   } catch (err) {
-    console.error("[Pêche Mignon] Erreur auto-fil:", err?.message || err);
+    console.error("[Péché Mignon] Erreur auto-fil:", err?.message || err);
   }
 });
 
@@ -492,17 +497,17 @@ client.on(Events.MessageUpdate, async (_oldMessage, newMessage) => {
   try {
     await persistBanProofMessage(msg, { replace: true });
   } catch (err) {
-    console.error("[Pêche Mignon] Erreur maj preuve:", err?.message || err);
+    console.error("[Péché Mignon] Erreur maj preuve:", err?.message || err);
   }
   try {
     await handleSelfieChannelReaction(msg);
   } catch (err) {
-    console.error("[Pêche Mignon] Erreur réactions salon selfie (maj):", err?.message || err);
+    console.error("[Péché Mignon] Erreur réactions salon selfie (maj):", err?.message || err);
   }
   try {
     await handleAutoThreadMessage(msg);
   } catch (err) {
-    console.error("[Pêche Mignon] Erreur auto-fil (maj):", err?.message || err);
+    console.error("[Péché Mignon] Erreur auto-fil (maj):", err?.message || err);
   }
 });
 
@@ -510,12 +515,12 @@ client.on(Events.ThreadUpdate, async (oldThread, newThread) => {
   try {
     await keepSelfieThreadOpen(oldThread, newThread);
   } catch (err) {
-    console.error("[Pêche Mignon] Erreur maintien fil selfie:", err?.message || err);
+    console.error("[Péché Mignon] Erreur maintien fil selfie:", err?.message || err);
   }
   try {
     await keepAutoThreadOpen(oldThread, newThread);
   } catch (err) {
-    console.error("[Pêche Mignon] Erreur maintien auto-fil:", err?.message || err);
+    console.error("[Péché Mignon] Erreur maintien auto-fil:", err?.message || err);
   }
 });
 
@@ -523,7 +528,7 @@ client.on(Events.MessageDelete, async (message) => {
   try {
     await deleteBanProofsForDeletedMessage(message);
   } catch (err) {
-    console.error("[Pêche Mignon] Erreur suppression preuve:", err?.message || err);
+    console.error("[Péché Mignon] Erreur suppression preuve:", err?.message || err);
   }
 });
 
@@ -556,7 +561,7 @@ client.on(Events.GuildBanAdd, async (ban) => {
       avatarURL: ban.user?.displayAvatarURL?.({ size: 128 }) || null,
     });
   } catch (err) {
-    console.error("[Pêche Mignon] Erreur GuildBanAdd (MP banni):", err?.message || err);
+    console.error("[Péché Mignon] Erreur GuildBanAdd (MP banni):", err?.message || err);
   }
 });
 
@@ -566,7 +571,7 @@ client.on(Events.GuildBanRemove, async (ban) => {
     const guildId = ban.guild?.id;
     if (userId && guildId) await removeBannedUser(userId, guildId);
   } catch (err) {
-    console.error("[Pêche Mignon] Erreur sync unban:", err?.message);
+    console.error("[Péché Mignon] Erreur sync unban:", err?.message);
   }
 });
 
@@ -583,14 +588,14 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 process.on('uncaughtException', (err) => {
-  console.error("[Pêche Mignon] uncaughtException:", err?.stack || err?.message || err);
+  console.error("[Péché Mignon] uncaughtException:", err?.stack || err?.message || err);
   stopRateLimitCleanup();
   safeReleaseInstanceLock('uncaughtException')
     .catch(() => {})
     .finally(() => process.exit(1));
 });
 process.on('unhandledRejection', (reason) => {
-  console.error("[Pêche Mignon] unhandledRejection:", reason?.stack || reason?.message || reason);
+  console.error("[Péché Mignon] unhandledRejection:", reason?.stack || reason?.message || reason);
   stopRateLimitCleanup();
   safeReleaseInstanceLock('unhandledRejection')
     .catch(() => {})
@@ -600,27 +605,27 @@ process.on('unhandledRejection', (reason) => {
 async function main() {
   try {
     const uri = (process.env.MONGODB_URI || process.env.MONGO_URI || '').trim();
-    console.log("[Pêche Mignon] MONGODB_URI défini:", uri.length > 0 ? 'oui' : 'non');
+    console.log("[Péché Mignon] MONGODB_URI défini:", uri.length > 0 ? 'oui' : 'non');
     await initDatabase();
-    console.log("[Pêche Mignon] Base de données initialisée" + (uri.length > 0 ? ' (MongoDB persistant).' : ' (SQLite local).'));
+    console.log("[Péché Mignon] Base de données initialisée" + (uri.length > 0 ? ' (MongoDB persistant).' : ' (SQLite local).'));
 
     if (DISABLE_INSTANCE_LOCK) {
-      console.warn(`[Pêche Mignon] Instance lock désactivé (key=${INSTANCE_LOCK_KEY}).`);
+      console.warn(`[Péché Mignon] Instance lock désactivé (key=${INSTANCE_LOCK_KEY}).`);
     } else {
       const acquired = await tryAcquireInstanceLock(INSTANCE_LOCK_KEY, instanceOwner, INSTANCE_LOCK_TTL_MS);
       if (!acquired) {
         const info = await getInstanceLockInfo(INSTANCE_LOCK_KEY).catch(() => null);
-        console.error(`[Pêche Mignon] Instance lock refusé: un autre bot est déjà actif (key=${INSTANCE_LOCK_KEY}).`);
-        if (info?.owner) console.error(`[Pêche Mignon] Lock actuel: owner=${info.owner}`);
+        console.error(`[Péché Mignon] Instance lock refusé: un autre bot est déjà actif (key=${INSTANCE_LOCK_KEY}).`);
+        if (info?.owner) console.error(`[Péché Mignon] Lock actuel: owner=${info.owner}`);
         process.exit(1);
       }
-      console.log(`[Pêche Mignon] Instance lock acquis (key=${INSTANCE_LOCK_KEY}, owner=${instanceOwner})`);
+      console.log(`[Péché Mignon] Instance lock acquis (key=${INSTANCE_LOCK_KEY}, owner=${instanceOwner})`);
       hasInstanceLock = true;
       instanceLockHeartbeat = setInterval(async () => {
         try {
           const ok = await renewInstanceLock(INSTANCE_LOCK_KEY, instanceOwner, INSTANCE_LOCK_TTL_MS);
           if (!ok) {
-            console.error(`[Pêche Mignon] Instance lock perdu → arrêt.`);
+            console.error(`[Péché Mignon] Instance lock perdu → arrêt.`);
             process.exit(1);
           }
         } catch (_) {}
@@ -631,17 +636,17 @@ async function main() {
       try {
         await cleanupPresentationDrafts('-3 days');
       } catch (e) {
-        console.error("[Pêche Mignon] Cleanup presentation_drafts:", e?.message || e);
+        console.error("[Péché Mignon] Cleanup presentation_drafts:", e?.message || e);
       }
     };
     await runDraftCleanup().catch(() => {});
     setInterval(() => runDraftCleanup().catch(() => {}), 6 * 60 * 60 * 1000);
   } catch (err) {
-    console.error("[Pêche Mignon] Erreur init base de données:", err.message);
+    console.error("[Péché Mignon] Erreur init base de données:", err.message);
     process.exit(1);
   }
   await client.login(config.token).catch((err) => {
-    console.error("[Pêche Mignon] Login failed:", err.message);
+    console.error("[Péché Mignon] Login failed:", err.message);
     process.exit(1);
   });
 }

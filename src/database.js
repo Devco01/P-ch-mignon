@@ -21,7 +21,7 @@ export async function initDatabase() {
 }
 
 function getBackend() {
-  if (!backend) throw new Error("[Pêche Mignon] initDatabase() doit être appelé au démarrage (index.js).");
+  if (!backend) throw new Error("[Péché Mignon] initDatabase() doit être appelé au démarrage (index.js).");
   return backend;
 }
 
