@@ -32,33 +32,45 @@ function joinRules(rules) {
 
 function buildReglementEmbeds(client) {
   const sakura = config.reglementSakuraEmoji;
+  const brand = config.embedBrand;
   const rules = [
     barParagraph(
       '1. 🔒 Serveur 100 % SFW :',
       'Ce serveur est exclusivement SFW. Tout contenu à caractère sexuel ou pornographique; illégal; gore; extrêmement violent; est strictement interdit. Tout contenu de ce type sera supprimé immédiatement et entraînera un ban définitif, sans avertissement préalable.'
     ),
     barParagraph(
-      '2. 👶 Âge minimum :',
-      'Les membres âgés de 15 à 17 ans sont autorisés sur le serveur. Les personnes ayant moins de 15 ans ne sont pas autorisées à rejoindre la communauté. L’âge minimum requis pour utiliser Discord en France est de 15 ans. Merci de respecter cette limite d’âge.'
+      '2. 🛡️ Vérification de l’âge & certification :',
+      `Afin de garantir un environnement sécurisé pour notre population la plus jeune, les personnes âgées de plus de 40 ans ne sont pas autorisées sur le serveur. La certification est obligatoire pour accéder au reste de ${brand}. Cette étape nous permet de préserver une communauté majeure, saine et sécurisée, en limitant l’accès aux mineurs, aux personnes ayant des comportements prédateurs ou malveillants, ainsi qu’aux profils susceptibles de mettre en danger ou de perturber la communauté.`,
+      '',
+      'Tant que votre certification n’a pas été validée par le staff, votre accès restera limité aux salons d’accueil.'
     ),
     barParagraph(
-      '3. 🛡️ Vérification de l’âge & protection des mineurs :',
-      'Afin de garantir un environnement sécurisé pour notre population la plus jeune, les personnes âgées de plus de 40 ans ne sont pas autorisées sur le serveur. En cas de doute concernant l’âge déclaré d’un membre, la modération se réserve le droit de vous convoquer en entretien afin de procéder à une vérification d’âge. Cette vérification pourra être demandée notamment lorsqu’un profil, un comportement ou des informations fournies semblent incohérents avec l’âge déclaré. Un refus de coopérer à une vérification d’âge pourra entraîner une exclusion définitive du serveur.'
+      '3. 🔐 Choisissez vos accès :',
+      `Sur ${brand}, vous êtes libre de choisir le type de contenu auquel vous souhaitez avoir accès.`,
+      '',
+      '🍎 **Certification SFW :**',
+      'Accès uniquement à la partie classique du serveur : communauté, gaming, discussions et animations. Aucun contenu NSFW ne vous sera accessible.',
+      '',
+      '🔞 **Certification NSFW :**',
+      'Réservée aux membres. Elle comprend tous les accès SFW, ainsi que les espaces réservés aux adultes : discussions -18, nudes, teases, action ou vérité, etc.',
+      '',
+      '🎫 Lors de votre certification, merci de nous préciser en ticket si vous souhaitez un accès SFW ou NSFW.',
+      '',
+      '🔄 **Vous changez d’avis ?**',
+      'Aucun souci ! Votre choix n’est pas définitif. Vous pouvez passer d’une certification SFW à NSFW, ou inversement, à tout moment en ouvrant simplement un nouveau ticket auprès du staff.',
+      '',
+      'Vous pourrez ainsi profiter du serveur selon vos préférences, sans être exposé à du contenu que vous ne souhaitez pas voir.'
     ),
     barParagraph(
-      '4. 🚨 Protection des mineurs & comportements inappropriés :',
-      'Toute personne ayant des comportements de « pointeur » envers des mineurs sera bannie définitivement. Il est strictement interdit d’entretenir ou de rechercher une relation sexuelle et/ou amoureuse avec un(e) mineur(e). Si vous êtes témoin d’un comportement qui vous semble inapproprié, prédateur, manipulateur ou suspect envers un mineur, merci de le signaler immédiatement à la modération.'
-    ),
-    barParagraph(
-      '5. 🏷️ Utilisation des salons :',
+      '4. 🏷️ Utilisation des salons :',
       'Merci de respecter l’utilisation prévue pour chaque salon. Postez vos messages dans les salons appropriés et évitez le hors sujet lorsque celui-ci n’est pas autorisé.'
     ),
     barParagraph(
-      '6. 🎫 Tickets :',
+      '5. 🎫 Tickets :',
       'Lorsque vous ouvrez un ticket auprès de la modération, merci de rester réactif et disponible. Nous faisons notre maximum pour vous répondre rapidement; nous vous demandons donc d’en faire de même. Un ticket resté sans réponse pendant plus de 24 heures entraînera un warn.'
     ),
     barParagraph(
-      '7. 🚫 Respect & tolérance :',
+      '6. 🚫 Respect & tolérance :',
       'Aucun comportement discriminatoire ou haineux ne sera toléré.',
       'Sont notamment interdits :',
       '❌ Les propos racistes ;',
@@ -71,8 +83,8 @@ function buildReglementEmbeds(client) {
       'Tout comportement grave entraînera un ban immédiat et définitif, sans avertissement.'
     ),
     barParagraph(
-      '8. 🌿 Le mot d’ordre : bienveillance',
-      `${config.embedBrand} est avant tout un espace où chacun doit pouvoir se sentir à l’aise, respecté et en sécurité. Soyez respectueux envers les autres membres, la modération et vous-même. En cas de conflit ou de situation problématique, privilégiez le dialogue et faites appel à la modération.`
+      '7. 🌿 Le mot d’ordre : bienveillance',
+      `${brand} est avant tout un espace où chacun doit pouvoir se sentir à l’aise, respecté et en sécurité. Soyez respectueux envers les autres membres, la modération et vous-même. En cas de conflit ou de situation problématique, privilégiez le dialogue et faites appel à la modération.`
     ),
   ];
 
@@ -81,11 +93,11 @@ function buildReglementEmbeds(client) {
     .setAuthor(getBotAuthor(client))
     .setDescription(
       [
-        `${sakura} **__Bienvenue sur ${config.embedBrand}__** ${sakura}`,
+        `${sakura} **__Bienvenue sur ${brand}__** ${sakura}`,
         '',
         'Afin de préserver un espace chill, convivial, bienveillant et sécurisé, merci de prendre connaissance du règlement avant de participer à la vie du serveur.',
         '',
-        joinRules(rules.slice(0, 4)),
+        joinRules(rules.slice(0, 3)),
       ].join('\n')
     );
 
@@ -93,9 +105,9 @@ function buildReglementEmbeds(client) {
     .setColor(COLOR_OTHER)
     .setDescription(
       [
-        joinRules(rules.slice(4)),
+        joinRules(rules.slice(3)),
         '',
-        `🌸 En rejoignant **__${config.embedBrand}__**, vous acceptez l’intégralité de ce règlement.`,
+        `🌸 En rejoignant **__${brand}__**, vous acceptez l’intégralité de ce règlement.`,
       ].join('\n')
     )
     .setFooter(getBotFooter(client, { extra: 'Règlement' }));
