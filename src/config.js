@@ -146,6 +146,10 @@ export const config = {
   infoMpChannelId: envId('INFO_MP_CHANNEL_ID'),
   welcomeChannelId: envId('WELCOME_CHANNEL_ID'),
   welcomeRoleIds: new Set(parseCsvList(process.env.WELCOME_ROLE_IDS || '')),
+  /** Rôles qui voient /confession, /confession-réponse et /présentation. */
+  memberSlashRoleIds: parseCsvList(
+    process.env.MEMBER_SLASH_ROLE_IDS || '1547936068488400896,1547947506757799966'
+  ),
   messageLogChannelId: envId('MESSAGE_LOG_CHANNEL_ID'),
 };
 

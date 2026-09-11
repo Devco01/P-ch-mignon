@@ -16,7 +16,6 @@ import {
   addBannedUser,
   getBannedUser,
   updateBannedUser,
-  listConfessionLogConfigsForGuild,
 } from './database.js';
 import { commands } from './commands/index.js';
 import {
@@ -287,72 +286,40 @@ async function registerCommands() {
   return await rest.put(Routes.applicationCommands(client.user.id), { body });
 }
 
-async function allowUseApplicationCommands(channel, role, reason) {
-  if (!channel?.permissionOverwrites?.edit || !role) return;
+async function grantUseApplicationCommandsToRole(role) {
+  if (role.permissions.has(PermissionFlagsBits.UseApplicationCommands)) {
+    console.log(`[Péché Mignon] ${role.name} a déjà « Utiliser les commandes de l’application ».`);
+    return;
+  }
   try {
-    await channel.permissionOverwrites.edit(
-      role,
-      { ViewChannel: true, UseApplicationCommands: true, ReadMessageHistory: true },
-      { reason }
+    await role.setPermissions(
+      role.permissions.add(PermissionFlagsBits.UseApplicationCommands),
+      'Autoriser /confession, /confession-réponse et /présentation'
     );
-    console.log(`[Péché Mignon] Use Application Commands OK pour ${role.id} dans #${channel.name || channel.id}.`);
+    console.log(`[Péché Mignon] Permission commandes ajoutée au rôle ${role.name} (${role.id}).`);
   } catch (err) {
-    console.warn(
-      `[Péché Mignon] Overwrite commandes impossible dans ${channel.id}:`,
-      err?.message || err
-    );
+    console.warn(`[Péché Mignon] Impossible de modifier le rôle ${role.name}:`, err?.message || err);
   }
 }
 
 async function syncMemberSlashCommandAccess(client) {
   const guildId = config.guildId;
-  const roleId = config.reglementMemberRoleId;
-  if (!guildId || !roleId) {
-    console.warn("[Péché Mignon] Permissions slash membres : GUILD_ID ou REGLEMENT_MEMBER_ROLE_ID manquant.");
+  const roleIds = config.memberSlashRoleIds || [];
+  if (!guildId || roleIds.length === 0) {
+    console.warn("[Péché Mignon] Permissions slash membres : GUILD_ID ou MEMBER_SLASH_ROLE_IDS manquant.");
     return;
   }
   const guild = client.guilds.cache.get(guildId);
   if (!guild) return;
 
-  const role =
-    guild.roles.cache.get(roleId) || (await guild.roles.fetch(roleId).catch(() => null));
-  if (!role) {
-    console.warn(`[Péché Mignon] Rôle membre ${roleId} introuvable.`);
-    return;
-  }
-
-  if (!role.permissions.has(PermissionFlagsBits.UseApplicationCommands)) {
-    try {
-      await role.setPermissions(
-        role.permissions.add(PermissionFlagsBits.UseApplicationCommands),
-        'Autoriser les membres à voir /confession, /confession-réponse et /présentation'
-      );
-      console.log(`[Péché Mignon] Permission « Utiliser les commandes de l’application » ajoutée au rôle ${role.name}.`);
-    } catch (err) {
-      console.warn(`[Péché Mignon] Impossible de modifier le rôle ${role.name}:`, err?.message || err);
+  for (const roleId of roleIds) {
+    const role =
+      guild.roles.cache.get(roleId) || (await guild.roles.fetch(roleId).catch(() => null));
+    if (!role) {
+      console.warn(`[Péché Mignon] Rôle commandes membres ${roleId} introuvable.`);
+      continue;
     }
-  }
-
-  const channelIds = new Set();
-  if (config.presentationChannelId) channelIds.add(config.presentationChannelId);
-  for (const id of config.presentationResetChannelIds || []) channelIds.add(id);
-  try {
-    const confessionCfgs = await listConfessionLogConfigsForGuild(guild.id);
-    for (const cfg of confessionCfgs || []) {
-      if (cfg.sourceChannelId) channelIds.add(cfg.sourceChannelId);
-    }
-  } catch (err) {
-    console.warn("[Péché Mignon] Lecture des salons confession impossible:", err?.message || err);
-  }
-
-  for (const channelId of channelIds) {
-    const channel = await guild.channels.fetch(channelId).catch(() => null);
-    if (!channel) continue;
-    await allowUseApplicationCommands(
-      channel,
-      role,
-      'Autoriser les membres à utiliser /confession et /présentation'
-    );
+    await grantUseApplicationCommandsToRole(role);
   }
 }
 
