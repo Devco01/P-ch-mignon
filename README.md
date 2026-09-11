@@ -72,6 +72,10 @@ Un membre ne peut avoir **qu’un ticket ouvert** à la fois.
 - `AUTO_THREAD_CHANNEL_IDS` : salons avec fil sous image / lien.
 - `AUTO_MEDIA_CATEGORY_IDS` : **tous** les salons de ces catégories ont fil + réactions `CATEGORY_REACTION_IDS`.
 
+## Bienvenue
+
+Quand un membre **obtient** l’un des rôles `WELCOME_ROLE_IDS`, une des 4 phrases est postée au hasard dans `WELCOME_CHANNEL_ID`, avec une mention cliquable (`@pseudo`). Un second rôle parmi les deux ne renvoie pas un nouveau message.
+
 ## Base de données
 
 - Sans `MONGODB_URI` : SQLite dans `data/peche-mignon.db`

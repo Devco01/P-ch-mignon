@@ -66,6 +66,7 @@ import {
 } from './commands/confession.js';
 import { handleReglement, isReglementButton, handleReglementButton } from './commands/reglement.js';
 import { handleInformations } from './commands/informations.js';
+import { handleWelcomeMemberAdd, handleWelcomeMemberUpdate } from './welcome.js';
 
 validateConfig();
 
@@ -318,6 +319,13 @@ client.once(Events.ClientReady, async (c) => {
   if (autoThreadIds.length) {
     console.log(`[Péché Mignon] Auto-fils (images/liens) actifs sur ${autoThreadIds.length} salon(s): ${autoThreadIds.join(', ')}`);
   }
+  if (config.welcomeChannelId && config.welcomeRoleIds.size) {
+    console.log(
+      `[Péché Mignon] Bienvenue actif: salon ${config.welcomeChannelId}, ${config.welcomeRoleIds.size} rôle(s)`
+    );
+  } else {
+    console.warn("[Péché Mignon] Bienvenue inactif: WELCOME_CHANNEL_ID ou WELCOME_ROLE_IDS manquant.");
+  }
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
@@ -530,6 +538,14 @@ client.on(Events.MessageDelete, async (message) => {
   } catch (err) {
     console.error("[Péché Mignon] Erreur suppression preuve:", err?.message || err);
   }
+});
+
+client.on(Events.GuildMemberAdd, async (member) => {
+  await handleWelcomeMemberAdd(member);
+});
+
+client.on(Events.GuildMemberUpdate, async (oldMember, newMember) => {
+  await handleWelcomeMemberUpdate(oldMember, newMember);
 });
 
 client.on(Events.GuildBanAdd, async (ban) => {

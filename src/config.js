@@ -141,6 +141,8 @@ export const config = {
   infoLevel1RoleId: envId('INFO_LEVEL_1_ROLE_ID'),
   infoLevel5RoleId: envId('INFO_LEVEL_5_ROLE_ID'),
   infoMpChannelId: envId('INFO_MP_CHANNEL_ID'),
+  welcomeChannelId: envId('WELCOME_CHANNEL_ID'),
+  welcomeRoleIds: new Set(parseCsvList(process.env.WELCOME_ROLE_IDS || '')),
 };
 
 /** Catégorie Discord d’un salon (ou du salon parent si c’est un fil). */
