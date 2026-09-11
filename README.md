@@ -76,6 +76,10 @@ Un membre ne peut avoir **qu’un ticket ouvert** à la fois.
 
 Quand un membre **obtient** l’un des rôles `WELCOME_ROLE_IDS`, une des 4 phrases est postée au hasard dans `WELCOME_CHANNEL_ID`, avec une mention cliquable (`@pseudo`). Un second rôle parmi les deux ne renvoie pas un nouveau message.
 
+## Logs messages
+
+`MESSAGE_LOG_CHANNEL_ID` reçoit une copie des **suppressions** et **éditions** (message d’origine + nouveau texte). Les messages du bot et de ce salon de logs sont ignorés. Le contenu n’est disponible que s’il était encore en cache (environ 30 min).
+
 ## Base de données
 
 - Sans `MONGODB_URI` : SQLite dans `data/peche-mignon.db`

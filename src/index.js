@@ -67,6 +67,7 @@ import {
 import { handleReglement, isReglementButton, handleReglementButton } from './commands/reglement.js';
 import { handleInformations } from './commands/informations.js';
 import { handleWelcomeMemberAdd, handleWelcomeMemberUpdate } from './welcome.js';
+import { handleMessageLogDelete, handleMessageLogUpdate, handleMessageLogBulkDelete } from './messageLogs.js';
 
 validateConfig();
 
@@ -164,7 +165,7 @@ const client = new Client({
   ],
   makeCache: Options.cacheWithLimits({
     ...Options.DefaultMakeCacheSettings,
-    MessageManager: 0,
+    MessageManager: 200,
     PresenceManager: 0,
     GuildEmojiManager: 0,
     GuildStickerManager: 0,
@@ -176,7 +177,7 @@ const client = new Client({
   }),
   sweepers: {
     ...Options.DefaultSweeperSettings,
-    messages: { interval: 60, lifetime: 30 },
+    messages: { interval: 300, lifetime: 1800 },
     threads: { interval: 60, lifetime: 30 },
   },
 });
@@ -326,6 +327,9 @@ client.once(Events.ClientReady, async (c) => {
   } else {
     console.warn("[Péché Mignon] Bienvenue inactif: WELCOME_CHANNEL_ID ou WELCOME_ROLE_IDS manquant.");
   }
+  if (config.messageLogChannelId) {
+    console.log(`[Péché Mignon] Logs messages (suppression / édition) : ${config.messageLogChannelId}`);
+  }
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
@@ -465,6 +469,11 @@ client.on(Events.MessageBulkDelete, async (messages, channel) => {
   } catch (err) {
     console.error("[Péché Mignon] Erreur purge présentations (bulk delete):", err?.message || err);
   }
+  try {
+    await handleMessageLogBulkDelete(messages, channel ?? messages.first()?.channel);
+  } catch (err) {
+    console.error("[Péché Mignon] Erreur log purge messages:", err?.message || err);
+  }
 });
 
 client.on(Events.ChannelDelete, async (channel) => {
@@ -494,6 +503,11 @@ client.on(Events.MessageCreate, async (message) => {
 });
 
 client.on(Events.MessageUpdate, async (_oldMessage, newMessage) => {
+  try {
+    await handleMessageLogUpdate(_oldMessage, newMessage);
+  } catch (err) {
+    console.error("[Péché Mignon] Erreur log édition message:", err?.message || err);
+  }
   let msg = newMessage;
   if (msg.partial) {
     try {
@@ -537,6 +551,11 @@ client.on(Events.MessageDelete, async (message) => {
     await deleteBanProofsForDeletedMessage(message);
   } catch (err) {
     console.error("[Péché Mignon] Erreur suppression preuve:", err?.message || err);
+  }
+  try {
+    await handleMessageLogDelete(message);
+  } catch (err) {
+    console.error("[Péché Mignon] Erreur log suppression message:", err?.message || err);
   }
 });
 

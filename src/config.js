@@ -143,6 +143,7 @@ export const config = {
   infoMpChannelId: envId('INFO_MP_CHANNEL_ID'),
   welcomeChannelId: envId('WELCOME_CHANNEL_ID'),
   welcomeRoleIds: new Set(parseCsvList(process.env.WELCOME_ROLE_IDS || '')),
+  messageLogChannelId: envId('MESSAGE_LOG_CHANNEL_ID'),
 };
 
 /** Catégorie Discord d’un salon (ou du salon parent si c’est un fil). */
