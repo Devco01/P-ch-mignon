@@ -83,7 +83,13 @@ function buildReglementEmbeds(client) {
       'Tout comportement grave entraînera un ban immédiat et définitif, sans avertissement.'
     ),
     barParagraph(
-      '7. 🌿 Le mot d’ordre : bienveillance',
+      '7. ⚖️ Apolitique & areligieux :',
+      `${brand} est un espace apolitique et areligieux. Les débats, prises de position, propagande ou provocations autour de la politique et de la religion n’ont pas leur place sur le serveur. Chacun est libre d’avoir ses opinions, ses convictions et ses croyances, mais celles-ci relèvent de la sphère personnelle. Respectez les autres comme vous souhaitez être respecté. Aucun jugement, conflit, discrimination ou attaque envers un membre en raison de ses idées ou de ses croyances ne sera toléré.`,
+      '',
+      'Ici, nous sommes avant tout réunis pour partager de bons moments et profiter de la communauté, pas pour opposer nos convictions. 💕'
+    ),
+    barParagraph(
+      '8. 🌿 Le mot d’ordre : bienveillance',
       `${brand} est avant tout un espace où chacun doit pouvoir se sentir à l’aise, respecté et en sécurité. Soyez respectueux envers les autres membres, la modération et vous-même. En cas de conflit ou de situation problématique, privilégiez le dialogue et faites appel à la modération.`
     ),
   ];
