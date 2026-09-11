@@ -612,7 +612,7 @@ async function main() {
         const info = await getInstanceLockInfo(INSTANCE_LOCK_KEY).catch(() => null);
         console.error(`[Pêche Mignon] Instance lock refusé: un autre bot est déjà actif (key=${INSTANCE_LOCK_KEY}).`);
         if (info?.owner) console.error(`[Pêche Mignon] Lock actuel: owner=${info.owner}`);
-        process.exit(0);
+        process.exit(1);
       }
       console.log(`[Pêche Mignon] Instance lock acquis (key=${INSTANCE_LOCK_KEY}, owner=${instanceOwner})`);
       hasInstanceLock = true;

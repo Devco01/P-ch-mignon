@@ -336,7 +336,9 @@ export async function tryAcquireInstanceLock(key, owner, ttlMs = 90_000) {
       { $set: { key: k, owner: o, acquired_at: now, expires_at: expires } },
       { upsert: true, returnDocument: 'after' }
     );
-    return r?.value?.owner === o;
+    // Driver Mongo 6 : le document est renvoyé directement (plus { value }).
+    const doc = r?.value !== undefined ? r.value : r;
+    return doc?.owner === o;
   } catch (_) {
     return false;
   }
