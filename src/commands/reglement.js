@@ -71,16 +71,16 @@ function buildReglementEmbeds(client) {
       'Ici, nous sommes avant tout réunis pour partager de bons moments et profiter de la communauté, pas pour opposer nos convictions. 💕'
     ),
     barParagraph(
-      '4. 🌿 Le mot d’ordre : bienveillance',
-      `${brand} est avant tout un espace où chacun doit pouvoir se sentir à l’aise, respecté et en sécurité. Soyez respectueux envers les autres membres, la modération et vous-même. En cas de conflit ou de situation problématique, privilégiez le dialogue et faites appel à la modération.`
-    ),
-    barParagraph(
-      '5. 🏷️ Utilisation des salons :',
+      '4. 🏷️ Utilisation des salons :',
       'Merci de respecter l’utilisation prévue pour chaque salon. Postez vos messages dans les salons appropriés et évitez le hors sujet lorsque celui-ci n’est pas autorisé.'
     ),
     barParagraph(
-      '6. 🎫 Tickets :',
+      '5. 🎫 Tickets :',
       'Lorsque vous ouvrez un ticket auprès de la modération, merci de rester réactif et disponible. Nous faisons notre maximum pour vous répondre rapidement; nous vous demandons donc d’en faire de même. Un ticket resté sans réponse pendant plus de 24 heures entraînera un warn.'
+    ),
+    barParagraph(
+      '6. 🌿 Le mot d’ordre : bienveillance',
+      `${brand} est avant tout un espace où chacun doit pouvoir se sentir à l’aise, respecté et en sécurité. Soyez respectueux envers les autres membres, la modération et vous-même. En cas de conflit ou de situation problématique, privilégiez le dialogue et faites appel à la modération.`
     ),
   ];
 
