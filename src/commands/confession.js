@@ -317,7 +317,8 @@ export async function handleConfession(interaction) {
     const publicEmbed = new EmbedBuilder()
       .setColor(COLOR_OTHER)
       .setAuthor(getBotAuthor(interaction.client))
-      .setDescription(confessionBody);
+      .setDescription(confessionBody)
+      .setFooter(getBotFooter(interaction.client, { extra: 'Confession', date: new Date() }));
     if (confessionNo > 0) publicEmbed.setTitle(`Confession n°${confessionNo}`);
     if (imageUrl) {
       publicEmbed.setImage(`attachment://${fileName}`);
@@ -444,7 +445,8 @@ export async function handleConfessionReponse(interaction) {
     const publicEmbed = new EmbedBuilder()
       .setColor(COLOR_OTHER)
       .setAuthor(getBotAuthor(interaction.client))
-      .setDescription(replyBody);
+      .setDescription(replyBody)
+      .setFooter(getBotFooter(interaction.client, { extra: 'Confession', date: new Date() }));
     sent = await channel.send({
       embeds: [publicEmbed],
       allowedMentions: { parse: [] },

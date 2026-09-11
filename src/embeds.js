@@ -2,7 +2,7 @@ import { config } from './config.js';
 import { formatFooterDateTime } from './validation.js';
 
 function getFooterBrand() {
-  return config.embedBrand || 'Pêche Mignon';
+  return config.embedBrand || 'Péché Mignon';
 }
 
 export const COLOR_SANCTION = config.embedColorSanction;

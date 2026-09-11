@@ -101,7 +101,7 @@ export const config = {
   /** Embeds hors sanctions (présentation, tickets, analyse). */
   embedColorOther: parseHexColor(process.env.EMBED_COLOR_OTHER || process.env.DISCORD_EMBED_COLOR_OTHER, 0xf6b3ce),
   /** Marque footer / auteur des embeds (règlement, infos, sanctions). */
-  embedBrand: (process.env.EMBED_BRAND || 'Pêche Mignon').trim() || 'Pêche Mignon',
+  embedBrand: (process.env.EMBED_BRAND || 'Péché Mignon').trim() || 'Péché Mignon',
   presentationReactions: parsePresentationReactions(),
   presentationResetChannelIds: parsePresentationResetChannelIds(),
   presentationResetMinBulk: parsePresentationResetMinBulk(),
