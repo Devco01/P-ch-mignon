@@ -58,7 +58,7 @@ import {
 import { handlePresentationChannelBulkDelete, handlePresentationChannelDelete } from './presentationReset.js';
 import { persistBanProofMessage, deleteBanProofsForDeletedMessage } from './banProofs.js';
 import { handleSelfieChannelReaction, keepSelfieThreadOpen } from './selfieReactions.js';
-import { handleAutoThreadMessage, keepAutoThreadOpen } from './autoThreads.js';
+import { handleAutoThreadMessage, keepAutoThreadOpen, deleteAutoThreadIfStarterRemoved, deleteAutoThreadsForBulkRemoved } from './autoThreads.js';
 import {
   handleConfession,
   handleConfessionReponse,
@@ -474,6 +474,11 @@ client.on(Events.MessageBulkDelete, async (messages, channel) => {
   } catch (err) {
     console.error("[Péché Mignon] Erreur log purge messages:", err?.message || err);
   }
+  try {
+    await deleteAutoThreadsForBulkRemoved(messages);
+  } catch (err) {
+    console.error("[Péché Mignon] Erreur suppression auto-fils (purge):", err?.message || err);
+  }
 });
 
 client.on(Events.ChannelDelete, async (channel) => {
@@ -556,6 +561,11 @@ client.on(Events.MessageDelete, async (message) => {
     await handleMessageLogDelete(message);
   } catch (err) {
     console.error("[Péché Mignon] Erreur log suppression message:", err?.message || err);
+  }
+  try {
+    await deleteAutoThreadIfStarterRemoved(message);
+  } catch (err) {
+    console.error("[Péché Mignon] Erreur suppression auto-fil:", err?.message || err);
   }
 });
 

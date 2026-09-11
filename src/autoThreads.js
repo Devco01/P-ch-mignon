@@ -1,5 +1,6 @@
 import { PermissionFlagsBits, ThreadAutoArchiveDuration } from 'discord.js';
 import { config, isAutoMediaCategoryChannel } from './config.js';
+import { getTicketByThreadId } from './database.js';
 
 const MEDIA_ATTACHMENT_EXT = /\.(png|jpe?g|gif|webp|bmp|heic|heif|mp4|mov|webm)$/i;
 const URL_IN_TEXT = /(?:https?:\/\/|www\.)[^\s<]+|discord\.gg\/[^\s<]+/i;
@@ -134,5 +135,61 @@ export async function keepAutoThreadOpen(_oldThread, newThread) {
     await thread.setArchived(false, 'Les fils automatiques restent ouverts.');
   } catch (err) {
     console.warn(`[Péché Mignon] auto-fil désarchivage impossible (${thread.id}):`, err?.message || err);
+  }
+}
+
+function isAutoThreadParentChannelId(channel) {
+  if (!channel?.id) return false;
+  if (typeof channel.isThread === 'function' && channel.isThread()) return false;
+  if (config.autoThreadChannelIds.has(channel.id)) return true;
+  if (config.selfieChannelIds.has(channel.id)) return true;
+  return isAutoMediaCategoryChannel(channel);
+}
+
+async function resolveThreadFromStarter(message) {
+  if (!message) return null;
+  if (message.thread) return message.thread;
+  if (message.hasThread && typeof message.fetchThread === 'function') {
+    const t = await message.fetchThread().catch(() => null);
+    if (t) return t;
+  }
+  const byId = await message.guild?.channels?.fetch?.(message.id).catch(() => null);
+  if (byId && typeof byId.isThread === 'function' && byId.isThread()) return byId;
+  return null;
+}
+
+/** Supprime le fil auto si le message d’origine est effacé. Ne touche pas aux tickets. */
+export async function deleteAutoThreadIfStarterRemoved(message) {
+  if (!message?.guild || !message.id) return;
+  if (typeof message.channel?.isThread === 'function' && message.channel.isThread()) return;
+  if (!isAutoThreadParentChannelId(message.channel)) return;
+
+  const thread = await resolveThreadFromStarter(message);
+  if (!thread) return;
+
+  const ticket = await getTicketByThreadId(thread.id).catch(() => null);
+  if (ticket) return;
+
+  try {
+    const me = message.guild.members.me ?? (await message.guild.members.fetchMe().catch(() => null));
+    const parent = thread.parent ?? message.channel;
+    if (me && parent && typeof me.permissionsIn === 'function') {
+      const perms = me.permissionsIn(parent);
+      if (perms && !perms.has(PermissionFlagsBits.ManageThreads)) {
+        console.warn(`[Péché Mignon] auto-fil: permission « Gérer les fils » manquante pour supprimer ${thread.id}.`);
+        return;
+      }
+    }
+    await thread.delete('Message d’origine supprimé');
+    console.log(`[Péché Mignon] auto-fil supprimé (starter ${message.id}): ${thread.id}`);
+  } catch (err) {
+    console.warn(`[Péché Mignon] auto-fil suppression impossible (${thread.id}):`, err?.message || err);
+  }
+}
+
+export async function deleteAutoThreadsForBulkRemoved(messages) {
+  if (!messages?.size) return;
+  for (const message of messages.values()) {
+    await deleteAutoThreadIfStarterRemoved(message);
   }
 }
