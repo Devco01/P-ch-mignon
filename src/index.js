@@ -1,4 +1,4 @@
-import { Client, Events, GatewayIntentBits, REST, Routes, MessageFlags, Options, AuditLogEvent, ApplicationCommandPermissionType } from 'discord.js';
+import { Client, Events, GatewayIntentBits, REST, Routes, MessageFlags, Options, AuditLogEvent, PermissionFlagsBits } from 'discord.js';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
@@ -16,6 +16,7 @@ import {
   addBannedUser,
   getBannedUser,
   updateBannedUser,
+  listConfessionLogConfigsForGuild,
 } from './database.js';
 import { commands } from './commands/index.js';
 import {
@@ -260,17 +261,48 @@ function attachResilientInteractionHandlers(interaction) {
   };
 }
 
+const MEMBER_SLASH_COMMANDS = new Set(['confession', 'confession-reponse', 'presentation']);
+
+function memberVisibleCommandBody() {
+  return commands.map((cmd) => {
+    const json = { ...cmd };
+    if (MEMBER_SLASH_COMMANDS.has(json.name)) {
+      json.default_member_permissions = null;
+      json.dm_permission = false;
+    }
+    return json;
+  });
+}
+
 async function registerCommands() {
   const rest = new REST().setToken(config.token);
-  const body = commands;
+  const body = memberVisibleCommandBody();
   if (config.guildId) {
     await rest.put(Routes.applicationCommands(client.user.id), { body: [] });
+    // Un PUT par nom conserve les IDs → les overwrites Intégrations (admins only) restent.
+    // On recrée les commandes pour que Discord oublie ces overwrites.
+    await rest.put(Routes.applicationGuildCommands(client.user.id, config.guildId), { body: [] });
     return await rest.put(Routes.applicationGuildCommands(client.user.id, config.guildId), { body });
   }
   return await rest.put(Routes.applicationCommands(client.user.id), { body });
 }
 
-const MEMBER_SLASH_COMMANDS = new Set(['confession', 'confession-reponse', 'presentation']);
+async function allowUseApplicationCommands(channel, role, reason) {
+  if (!channel?.permissionOverwrites?.edit || !role) return;
+  try {
+    await channel.permissionOverwrites.edit(
+      role,
+      { ViewChannel: true, UseApplicationCommands: true, ReadMessageHistory: true },
+      { reason }
+    );
+    console.log(`[Péché Mignon] Use Application Commands OK pour ${role.id} dans #${channel.name || channel.id}.`);
+  } catch (err) {
+    console.warn(
+      `[Péché Mignon] Overwrite commandes impossible dans ${channel.id}:`,
+      err?.message || err
+    );
+  }
+}
 
 async function syncMemberSlashCommandAccess(client) {
   const guildId = config.guildId;
@@ -282,32 +314,45 @@ async function syncMemberSlashCommandAccess(client) {
   const guild = client.guilds.cache.get(guildId);
   if (!guild) return;
 
-  let cmds;
-  try {
-    cmds = await guild.commands.fetch();
-  } catch (err) {
-    console.warn("[Péché Mignon] Fetch commandes guild impossible:", err?.message || err);
+  const role =
+    guild.roles.cache.get(roleId) || (await guild.roles.fetch(roleId).catch(() => null));
+  if (!role) {
+    console.warn(`[Péché Mignon] Rôle membre ${roleId} introuvable.`);
     return;
   }
 
-  const permissions = [
-    { id: roleId, type: ApplicationCommandPermissionType.Role, permission: true },
-  ];
-  for (const adminRoleId of config.adminRoleIds) {
-    permissions.push({ id: adminRoleId, type: ApplicationCommandPermissionType.Role, permission: true });
+  if (!role.permissions.has(PermissionFlagsBits.UseApplicationCommands)) {
+    try {
+      await role.setPermissions(
+        role.permissions.add(PermissionFlagsBits.UseApplicationCommands),
+        'Autoriser les membres à voir /confession, /confession-réponse et /présentation'
+      );
+      console.log(`[Péché Mignon] Permission « Utiliser les commandes de l’application » ajoutée au rôle ${role.name}.`);
+    } catch (err) {
+      console.warn(`[Péché Mignon] Impossible de modifier le rôle ${role.name}:`, err?.message || err);
+    }
   }
 
-  for (const cmd of cmds.values()) {
-    if (!MEMBER_SLASH_COMMANDS.has(cmd.name)) continue;
-    try {
-      await cmd.permissions.set({ permissions });
-      console.log(`[Péché Mignon] /${cmd.name} autorisée pour le rôle membre ${roleId}.`);
-    } catch (err) {
-      console.warn(
-        `[Péché Mignon] Permissions Discord pour /${cmd.name} non appliquées (${err?.message || err}). ` +
-          'À cocher à la main : Paramètres du serveur → Intégrations → Péché Mignon.'
-      );
+  const channelIds = new Set();
+  if (config.presentationChannelId) channelIds.add(config.presentationChannelId);
+  for (const id of config.presentationResetChannelIds || []) channelIds.add(id);
+  try {
+    const confessionCfgs = await listConfessionLogConfigsForGuild(guild.id);
+    for (const cfg of confessionCfgs || []) {
+      if (cfg.sourceChannelId) channelIds.add(cfg.sourceChannelId);
     }
+  } catch (err) {
+    console.warn("[Péché Mignon] Lecture des salons confession impossible:", err?.message || err);
+  }
+
+  for (const channelId of channelIds) {
+    const channel = await guild.channels.fetch(channelId).catch(() => null);
+    if (!channel) continue;
+    await allowUseApplicationCommands(
+      channel,
+      role,
+      'Autoriser les membres à utiliser /confession et /présentation'
+    );
   }
 }
 
@@ -329,9 +374,16 @@ client.once(Events.ClientReady, async (c) => {
 
   startRateLimitCleanup();
   try {
-    await registerCommands();
+    const registered = await registerCommands();
     const scope = config.guildId ? `serveur ${config.guildId}` : 'tous les serveurs (global)';
     console.log(`[Péché Mignon] Slash commands enregistrées pour ${scope}`);
+    const listed = Array.isArray(registered) ? registered : [];
+    for (const cmd of listed) {
+      if (!MEMBER_SLASH_COMMANDS.has(cmd.name)) continue;
+      console.log(
+        `[Péché Mignon] /${cmd.name} id=${cmd.id} default_member_permissions=${cmd.default_member_permissions}`
+      );
+    }
     await syncMemberSlashCommandAccess(c);
   } catch (e) {
     console.error("[Péché Mignon] Erreur enregistrement commandes:", e.message);
