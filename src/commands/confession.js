@@ -82,6 +82,8 @@ export const confessionCommands = [
   new SlashCommandBuilder()
     .setName('confession')
     .setDescription('Publier une confession anonyme.')
+    .setDefaultMemberPermissions(null)
+    .setDMPermission(false)
     .addStringOption((o) =>
       o.setName('texte').setDescription('Texte de la confession (obligatoire)').setRequired(true).setMaxLength(4096)
     )
@@ -94,6 +96,8 @@ export const confessionCommands = [
     .setNameLocalizations({ fr: 'confession-réponse' })
     .setDescription('Répondre anonymement dans le fil d’une confession.')
     .setDescriptionLocalizations({ fr: 'Répondre anonymement dans le fil d’une confession.' })
+    .setDefaultMemberPermissions(null)
+    .setDMPermission(false)
     .addStringOption((o) =>
       o.setName('texte').setDescription('Texte de la réponse (obligatoire)').setRequired(true).setMaxLength(4096)
     )

@@ -1,4 +1,4 @@
-import { Client, Events, GatewayIntentBits, REST, Routes, MessageFlags, Options, AuditLogEvent } from 'discord.js';
+import { Client, Events, GatewayIntentBits, REST, Routes, MessageFlags, Options, AuditLogEvent, ApplicationCommandPermissionType } from 'discord.js';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
@@ -270,6 +270,47 @@ async function registerCommands() {
   return await rest.put(Routes.applicationCommands(client.user.id), { body });
 }
 
+const MEMBER_SLASH_COMMANDS = new Set(['confession', 'confession-reponse', 'presentation']);
+
+async function syncMemberSlashCommandAccess(client) {
+  const guildId = config.guildId;
+  const roleId = config.reglementMemberRoleId;
+  if (!guildId || !roleId) {
+    console.warn("[Péché Mignon] Permissions slash membres : GUILD_ID ou REGLEMENT_MEMBER_ROLE_ID manquant.");
+    return;
+  }
+  const guild = client.guilds.cache.get(guildId);
+  if (!guild) return;
+
+  let cmds;
+  try {
+    cmds = await guild.commands.fetch();
+  } catch (err) {
+    console.warn("[Péché Mignon] Fetch commandes guild impossible:", err?.message || err);
+    return;
+  }
+
+  const permissions = [
+    { id: roleId, type: ApplicationCommandPermissionType.Role, permission: true },
+  ];
+  for (const adminRoleId of config.adminRoleIds) {
+    permissions.push({ id: adminRoleId, type: ApplicationCommandPermissionType.Role, permission: true });
+  }
+
+  for (const cmd of cmds.values()) {
+    if (!MEMBER_SLASH_COMMANDS.has(cmd.name)) continue;
+    try {
+      await cmd.permissions.set({ permissions });
+      console.log(`[Péché Mignon] /${cmd.name} autorisée pour le rôle membre ${roleId}.`);
+    } catch (err) {
+      console.warn(
+        `[Péché Mignon] Permissions Discord pour /${cmd.name} non appliquées (${err?.message || err}). ` +
+          'À cocher à la main : Paramètres du serveur → Intégrations → Péché Mignon.'
+      );
+    }
+  }
+}
+
 client.once(Events.ClientReady, async (c) => {
   try {
     await c.user.setPresence({
@@ -291,6 +332,7 @@ client.once(Events.ClientReady, async (c) => {
     await registerCommands();
     const scope = config.guildId ? `serveur ${config.guildId}` : 'tous les serveurs (global)';
     console.log(`[Péché Mignon] Slash commands enregistrées pour ${scope}`);
+    await syncMemberSlashCommandAccess(c);
   } catch (e) {
     console.error("[Péché Mignon] Erreur enregistrement commandes:", e.message);
   }

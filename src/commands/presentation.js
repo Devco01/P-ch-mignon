@@ -482,6 +482,8 @@ export const presentationCommands = [
     .setNameLocalizations({ fr: 'présentation' })
     .setDescription('Créer ta présentation via un formulaire')
     .setDescriptionLocalizations({ fr: 'Créer ta présentation via un formulaire' })
+    .setDefaultMemberPermissions(null)
+    .setDMPermission(false)
     .toJSON(),
 ];
 
