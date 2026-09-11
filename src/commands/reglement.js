@@ -127,7 +127,7 @@ function buildReglementButtons() {
       .setCustomId(REGLEMENT_ACCEPT_BUTTON_ID)
       .setEmoji('✔')
       .setLabel('Lu et approuvé')
-      .setStyle(ButtonStyle.Success)
+      .setStyle(ButtonStyle.Danger)
   );
 }
 
