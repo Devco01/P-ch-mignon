@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Fichiers sensibles
+.env
+.env.local
+.env.*.local
+
+# Base de données (reste locale, ne pas commiter)
+data/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db

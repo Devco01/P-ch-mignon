@@ -1,0 +1,21 @@
+[Unit]
+Description=Pêche Mignon Discord bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pechemignon
+Group=pechemignon
+WorkingDirectory=/home/pechemignon/bot
+ExecStart=/usr/bin/npm start
+Restart=on-failure
+RestartSec=5
+Environment=NODE_ENV=production
+# Empêche un second npm start « à la main » de rester invisible : logs systemd uniquement.
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=peche-mignon
+
+[Install]
+WantedBy=multi-user.target
