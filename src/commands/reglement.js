@@ -35,17 +35,7 @@ function buildReglementEmbeds(client) {
   const brand = config.embedBrand;
   const rules = [
     barParagraph(
-      '1. 🔒 Serveur 100 % SFW :',
-      'Ce serveur est exclusivement SFW. Tout contenu à caractère sexuel ou pornographique; illégal; gore; extrêmement violent; est strictement interdit. Tout contenu de ce type sera supprimé immédiatement et entraînera un ban définitif, sans avertissement préalable.'
-    ),
-    barParagraph(
-      '2. 🛡️ Vérification de l’âge & certification :',
-      `Afin de garantir un environnement sécurisé pour notre population la plus jeune, les personnes âgées de plus de 40 ans ne sont pas autorisées sur le serveur. La certification est obligatoire pour accéder au reste de ${brand}. Cette étape nous permet de préserver une communauté majeure, saine et sécurisée, en limitant l’accès aux mineurs, aux personnes ayant des comportements prédateurs ou malveillants, ainsi qu’aux profils susceptibles de mettre en danger ou de perturber la communauté.`,
-      '',
-      'Tant que votre certification n’a pas été validée par le staff, votre accès restera limité aux salons d’accueil.'
-    ),
-    barParagraph(
-      '3. 🔐 Choisissez vos accès :',
+      '1. 🔐 Choisissez vos accès :',
       `Sur ${brand}, vous êtes libre de choisir le type de contenu auquel vous souhaitez avoir accès.`,
       '',
       '🍎 **Certification SFW :**',
@@ -62,15 +52,15 @@ function buildReglementEmbeds(client) {
       'Vous pourrez ainsi profiter du serveur selon vos préférences, sans être exposé à du contenu que vous ne souhaitez pas voir.'
     ),
     barParagraph(
-      '4. 🏷️ Utilisation des salons :',
+      '2. 🏷️ Utilisation des salons :',
       'Merci de respecter l’utilisation prévue pour chaque salon. Postez vos messages dans les salons appropriés et évitez le hors sujet lorsque celui-ci n’est pas autorisé.'
     ),
     barParagraph(
-      '5. 🎫 Tickets :',
+      '3. 🎫 Tickets :',
       'Lorsque vous ouvrez un ticket auprès de la modération, merci de rester réactif et disponible. Nous faisons notre maximum pour vous répondre rapidement; nous vous demandons donc d’en faire de même. Un ticket resté sans réponse pendant plus de 24 heures entraînera un warn.'
     ),
     barParagraph(
-      '6. 🚫 Respect & tolérance :',
+      '4. 🚫 Respect & tolérance :',
       'Aucun comportement discriminatoire ou haineux ne sera toléré.',
       'Sont notamment interdits :',
       '❌ Les propos racistes ;',
@@ -83,13 +73,13 @@ function buildReglementEmbeds(client) {
       'Tout comportement grave entraînera un ban immédiat et définitif, sans avertissement.'
     ),
     barParagraph(
-      '7. ⚖️ Apolitique & areligieux :',
+      '5. ⚖️ Apolitique & areligieux :',
       `${brand} est un espace apolitique et areligieux. Les débats, prises de position, propagande ou provocations autour de la politique et de la religion n’ont pas leur place sur le serveur. Chacun est libre d’avoir ses opinions, ses convictions et ses croyances, mais celles-ci relèvent de la sphère personnelle. Respectez les autres comme vous souhaitez être respecté. Aucun jugement, conflit, discrimination ou attaque envers un membre en raison de ses idées ou de ses croyances ne sera toléré.`,
       '',
       'Ici, nous sommes avant tout réunis pour partager de bons moments et profiter de la communauté, pas pour opposer nos convictions. 💕'
     ),
     barParagraph(
-      '8. 🌿 Le mot d’ordre : bienveillance',
+      '6. 🌿 Le mot d’ordre : bienveillance',
       `${brand} est avant tout un espace où chacun doit pouvoir se sentir à l’aise, respecté et en sécurité. Soyez respectueux envers les autres membres, la modération et vous-même. En cas de conflit ou de situation problématique, privilégiez le dialogue et faites appel à la modération.`
     ),
   ];
