@@ -24,10 +24,26 @@ function sectionTitle(title) {
   return `✦ **__${title}__**`;
 }
 
+function infoRoleIds() {
+  return [
+    config.infoLevel1RoleId,
+    config.infoLevel5RoleId,
+    config.infoLevel15RoleId,
+    config.infoLevel50RoleId,
+    config.infoBoostRoleId,
+  ].filter(Boolean);
+}
+
 function buildInformationsEmbed(client) {
   const sakura = config.reglementSakuraEmoji;
-  const level1 = roleMention(config.infoLevel1RoleId);
-  const level5 = roleMention(config.infoLevel5RoleId);
+  const level1 = roleMention(config.infoLevel1RoleId) || 'Niveau 1';
+  const level5 = roleMention(config.infoLevel5RoleId) || 'Niveau 5';
+  const level15 = roleMention(config.infoLevel15RoleId) || 'Niveau 15';
+  const level50 = roleMention(config.infoLevel50RoleId) || 'Niveau 50';
+  const boost = roleMention(config.infoBoostRoleId) || 'Boost';
+  const mp = config.infoMpChannelId
+    ? `demandes de <#${config.infoMpChannelId}>`
+    : 'demandes de MP';
 
   return new EmbedBuilder()
     .setColor(COLOR_OTHER)
@@ -41,25 +57,15 @@ function buildInformationsEmbed(client) {
         '',
         'Votre activité sur le serveur vous permet de débloquer progressivement de nouveaux avantages !',
         '',
-        `${sectionTitle('🔊 Niveau 1')}${level1 ? `  ${level1}` : ''}`,
+        `${level1} : Accès aux vocaux.`,
         '',
-        'Vous débloquez l’accès aux salons vocaux du serveur.',
+        `${level5} : Accès à la catégorie « Membre » comprenant : selfies, ootd, présentations des membres + possibilité de faire des ${mp}.`,
         '',
-        `${sectionTitle('💫 Niveau 5')}${level5 ? `  ${level5}` : ''}`,
+        `${level15} : Rien pour le moment.`,
         '',
-        'Vous débloquez la catégorie réservée aux membres, avec :',
-        '・📸 Les salons Selfie & OOTD',
-        '・💬 Le forum des passions des membres',
-        '・🤫 Les confessions anonymes',
-        config.infoMpChannelId
-          ? `Ainsi que la possibilité de faire des demandes de <#${config.infoMpChannelId}>`
-          : 'Ainsi que la possibilité de faire des demandes de MP',
+        `${level50} : Rien pour le moment.`,
         '',
-        sectionTitle('🚀 Boost du serveur'),
-        '',
-        'En boostant le serveur, vous profitez :',
-        '・D’un boost d’XP x1,5, aussi bien à l’écrit qu’en vocal',
-        '・De la possibilité d’obtenir un rôle totalement personnalisé rien qu’à vous !',
+        `${boost} : Dédié aux boosters, te donne un boost d’XP à l’écrit et en vocal de x1,5 + boost de draftcoins (monnaie du serveur pour pouvoir acheter un rôle couleur / modifier son pseudo, etc.)`,
         '',
         sectionTitle('🎁 Concernant les giveaways'),
         '',
@@ -137,7 +143,7 @@ export async function handleInformations(interaction) {
   const file = buildThumbnailFile();
   const payload = {
     embeds: [buildInformationsEmbed(interaction.client)],
-    allowedMentions: { parse: [] },
+    allowedMentions: { parse: [], roles: infoRoleIds() },
   };
   if (file) {
     if (!perms?.has(PermissionFlagsBits.AttachFiles)) {

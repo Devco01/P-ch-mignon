@@ -138,8 +138,11 @@ export const config = {
   /** Emoji du titre du règlement (`<:nom:id>` ou unicode). */
   reglementSakuraEmoji: envId('REGLEMENT_SAKURA_EMOJI') || '🌸',
   infoChannelId: envId('INFO_CHANNEL_ID'),
-  infoLevel1RoleId: envId('INFO_LEVEL_1_ROLE_ID'),
-  infoLevel5RoleId: envId('INFO_LEVEL_5_ROLE_ID'),
+  infoLevel1RoleId: envId('INFO_LEVEL_1_ROLE_ID') || '1547977553543700620',
+  infoLevel5RoleId: envId('INFO_LEVEL_5_ROLE_ID') || '1547979262135631964',
+  infoLevel15RoleId: envId('INFO_LEVEL_15_ROLE_ID') || '1547979215478194296',
+  infoLevel50RoleId: envId('INFO_LEVEL_50_ROLE_ID') || '1547948801833177259',
+  infoBoostRoleId: envId('INFO_BOOST_ROLE_ID') || '1547921834673176648',
   infoMpChannelId: envId('INFO_MP_CHANNEL_ID'),
   welcomeChannelId: envId('WELCOME_CHANNEL_ID'),
   welcomeRoleIds: new Set(parseCsvList(process.env.WELCOME_ROLE_IDS || '')),
