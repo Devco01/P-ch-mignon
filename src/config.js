@@ -112,8 +112,12 @@ export const config = {
   embedColorSanction: parseHexColor(process.env.EMBED_COLOR_SANCTION || process.env.DISCORD_EMBED_COLOR_SANCTION, 0xc8102e),
   /** Embeds hors sanctions (présentation, tickets, analyse). */
   embedColorOther: parseHexColor(process.env.EMBED_COLOR_OTHER || process.env.DISCORD_EMBED_COLOR_OTHER, 0xc8102e),
-  /** Marque footer / auteur des embeds (règlement, infos, sanctions). */
+  /** Marque auteur des embeds (règlement, infos, sanctions). */
   embedBrand: (process.env.EMBED_BRAND || 'Péché Mignon').trim() || 'Péché Mignon',
+  /** Texte du footer des embeds. */
+  embedFooter:
+    (process.env.EMBED_FOOTER || 'Péché Mignon +18 | © All rights reserved.').trim() ||
+    'Péché Mignon +18 | © All rights reserved.',
   presentationReactions: parsePresentationReactions(),
   presentationResetChannelIds: parsePresentationResetChannelIds(),
   presentationResetMinBulk: parsePresentationResetMinBulk(),

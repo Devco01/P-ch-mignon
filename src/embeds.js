@@ -1,5 +1,4 @@
 import { config } from './config.js';
-import { formatFooterDateTime } from './validation.js';
 
 function getFooterBrand() {
   return config.embedBrand || 'Péché Mignon';
@@ -30,14 +29,8 @@ export function getBotAuthor(client) {
   return iconURL ? { name, iconURL } : { name };
 }
 
-export function getBotFooter(client, options = {}) {
-  let text = getFooterBrand();
-  if (options.extra) text += ` • ${options.extra}`;
-  if (options.date != null) {
-    const d = options.date instanceof Date ? options.date : new Date(options.date);
-    const dateStr = formatFooterDateTime(d);
-    if (dateStr) text += ` • ${dateStr}`;
-  }
+export function getBotFooter(client, _options = {}) {
+  const text = config.embedFooter || 'Péché Mignon +18 | © All rights reserved.';
   const iconURL = getEmbedBrandIconURL(client);
   return iconURL ? { text, iconURL } : { text };
 }
