@@ -250,11 +250,9 @@ function buildTicketEmbed({ client, userId, type, subject, claimedBy = null, clo
   return embed;
 }
 
+const PANEL_TICKET_TYPES = TICKET_TYPES.filter((t) => t.id !== 'partenariat');
+
 function buildPanelEmbed(client) {
-  const handshake = '\u{1FAF1}\u{1F3FC}\u{200D}\u{1FAF2}\u{1F3FB}';
-  const modalites = config.ticketPartenariatModalitesChannelId
-    ? `<#${config.ticketPartenariatModalitesChannelId}>`
-    : '📓┃modalités';
   return new EmbedBuilder()
     .setColor(COLOR_OTHER)
     .setAuthor(getBotAuthor(client))
@@ -266,7 +264,6 @@ function buildPanelEmbed(client) {
         '🚨 **Signalement** — signaler un membre, un comportement ou un problème',
         '💬 **Aide** — questions, soucis de permissions ou signalement d’un bug',
         '✅ **Certification** — vérification de ton âge et de l’authenticité de ton compte',
-        `${handshake} **Demande de partenariat** — uniquement après avoir pris connaissance de nos modalités au préalable : cf. ${modalites}`,
         '',
         '📌 **À savoir :**',
         '• Sois clair et précis dès ton premier message.',
@@ -282,7 +279,7 @@ function buildPanelEmbed(client) {
 
 function buildPanelButtons() {
   return new ActionRowBuilder().addComponents(
-    TICKET_TYPES.map((t) =>
+    PANEL_TICKET_TYPES.map((t) =>
       new ButtonBuilder()
         .setCustomId(`ticket_open_${t.id}`)
         .setLabel(t.label)
@@ -290,6 +287,40 @@ function buildPanelButtons() {
         .setStyle(t.buttonStyle)
     )
   );
+}
+
+async function deleteStoredTicketPanel(client, guildId) {
+  const panel = await getTicketPanel(guildId).catch(() => null);
+  if (!panel?.channel_id || !panel?.message_id) return;
+  const ch = await client.channels.fetch(panel.channel_id).catch(() => null);
+  const msg = ch?.messages ? await ch.messages.fetch(panel.message_id).catch(() => null) : null;
+  if (msg) await msg.delete().catch(() => {});
+}
+
+export async function refreshTicketPanelWithoutEdit(client, guildId) {
+  const panel = await getTicketPanel(guildId).catch(() => null);
+  const channelId = panel?.channel_id || config.ticketChannelId;
+  if (!channelId) return false;
+  const ch = await client.channels.fetch(channelId).catch(() => null);
+  if (!ch?.isTextBased?.() || ch.isThread?.()) return false;
+
+  const msg = panel?.message_id ? await ch.messages.fetch(panel.message_id).catch(() => null) : null;
+  const desc = msg?.embeds?.[0]?.description || '';
+  const hasPartenariat =
+    /partenariat/i.test(desc) ||
+    msg?.components?.some((row) =>
+      row.components?.some((c) => String(c.customId || '').includes('partenariat'))
+    );
+  if (msg && !hasPartenariat) return false;
+
+  if (msg) await msg.delete().catch(() => {});
+  const sent = await ch.send({
+    embeds: [buildPanelEmbed(client)],
+    components: [buildPanelButtons()],
+  });
+  if (guildId) await setTicketPanel(guildId, ch.id, sent.id);
+  console.log("[Péché Mignon] Panneau tickets renvoyé (partenariat retiré, nouveau message).");
+  return true;
 }
 
 export const ticketCommands = [
@@ -405,6 +436,7 @@ export async function handleTicketPanel(interaction) {
   }
 
   await ensureTicketChannelMemberAccess(channel, interaction.guild);
+  await deleteStoredTicketPanel(interaction.client, interaction.guild.id);
 
   const msg = await channel.send({
     embeds: [buildPanelEmbed(interaction.client)],
@@ -499,15 +531,6 @@ export async function handleTicketModalSubmit(interaction) {
     console.error("[Péché Mignon] Message initial ticket:", err?.message || err);
     return interaction.editReply({ content: `❌ Fil créé (<#${thread.id}>) mais le message d’accueil a échoué.` });
   }
-
-  try {
-    const panel = await getTicketPanel(guild.id);
-    if (panel?.channel_id && panel?.message_id) {
-      const ch = await interaction.client.channels.fetch(panel.channel_id).catch(() => null);
-      const msg = ch?.messages ? await ch.messages.fetch(panel.message_id).catch(() => null) : null;
-      if (msg) await msg.edit({ components: [buildPanelButtons()] }).catch(() => {});
-    }
-  } catch (_) {}
 
   return interaction.editReply({
     content: added

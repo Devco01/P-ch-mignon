@@ -44,6 +44,7 @@ import {
 } from './commands/presentation.js';
 import {
   handleTicketPanel,
+  refreshTicketPanelWithoutEdit,
   isTicketSelect,
   handleTicketSelect,
   isTicketOpenButton,
@@ -354,6 +355,12 @@ client.once(Events.ClientReady, async (c) => {
     await syncMemberSlashCommandAccess(c);
   } catch (e) {
     console.error("[Péché Mignon] Erreur enregistrement commandes:", e.message);
+  }
+  try {
+    const guildId = config.guildId || c.guilds.cache.first()?.id;
+    if (guildId) await refreshTicketPanelWithoutEdit(c, guildId);
+  } catch (e) {
+    console.warn("[Péché Mignon] Republier le panneau tickets impossible:", e?.message || e);
   }
   console.log(`[Péché Mignon] Connecté en tant que ${c.user.tag} (instance=${instanceId} pid=${process.pid})`);
   if (config.useGuildMembersIntent) {
