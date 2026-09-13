@@ -68,6 +68,16 @@ export const TICKET_TYPES = [
     title: '\u{1FAF1}\u{1F3FC}\u{200D}\u{1FAF2}\u{1F3FB} - Partenariat',
     buttonStyle: ButtonStyle.Primary,
   },
+  {
+    id: 'role-personnalise',
+    label: 'Rôle Personnalisé',
+    emoji: '💎',
+    blurb: 'réservé aux boosters : rôle couleur / pseudo personnalisé',
+    threadPrefix: 'RolePerso',
+    title: '💎 - Rôle Personnalisé',
+    buttonStyle: ButtonStyle.Primary,
+    boostersOnly: true,
+  },
 ];
 
 function getTicketType(id) {
@@ -264,6 +274,7 @@ function buildPanelEmbed(client) {
         '🚨 **Signalement** — signaler un membre, un comportement ou un problème',
         '💬 **Aide** — questions, soucis de permissions ou signalement d’un bug',
         '✅ **Certification** — vérification de ton âge et de l’authenticité de ton compte',
+        '💎 **Rôle Personnalisé** — réservé aux boosters : demander un rôle couleur ou un pseudo personnalisé',
         '',
         '📌 **À savoir :**',
         '• Sois clair et précis dès ton premier message.',
@@ -306,12 +317,12 @@ export async function refreshTicketPanelWithoutEdit(client, guildId) {
 
   const msg = panel?.message_id ? await ch.messages.fetch(panel.message_id).catch(() => null) : null;
   const desc = msg?.embeds?.[0]?.description || '';
-  const hasPartenariat =
-    /partenariat/i.test(desc) ||
-    msg?.components?.some((row) =>
-      row.components?.some((c) => String(c.customId || '').includes('partenariat'))
-    );
-  if (msg && !hasPartenariat) return false;
+  const customIds = (msg?.components || []).flatMap((row) =>
+    (row.components || []).map((c) => String(c.customId || ''))
+  );
+  const hasPartenariat = /partenariat/i.test(desc) || customIds.some((id) => id.includes('partenariat'));
+  const hasCustomRole = customIds.some((id) => id.includes('role-personnalise'));
+  if (msg && !hasPartenariat && hasCustomRole) return false;
 
   if (msg) await msg.delete().catch(() => {});
   const sent = await ch.send({
@@ -319,7 +330,7 @@ export async function refreshTicketPanelWithoutEdit(client, guildId) {
     components: [buildPanelButtons()],
   });
   if (guildId) await setTicketPanel(guildId, ch.id, sent.id);
-  console.log("[Péché Mignon] Panneau tickets renvoyé (partenariat retiré, nouveau message).");
+  console.log("[Péché Mignon] Panneau tickets renvoyé (nouveau message).");
   return true;
 }
 
@@ -357,10 +368,28 @@ export function isTicketButton(customId) {
   return customId === 'ticket_claim' || customId === 'ticket_close';
 }
 
+async function memberIsBooster(interaction) {
+  const guild = interaction.guild;
+  let member = interaction.member;
+  if (guild && (!member || !member.roles?.cache)) {
+    member = await guild.members.fetch(interaction.user.id).catch(() => null);
+  }
+  if (!member) return false;
+  if (member.premiumSince) return true;
+  if (config.infoBoostRoleId && member.roles?.cache?.has(config.infoBoostRoleId)) return true;
+  return false;
+}
+
 async function showTicketSubjectModal(interaction, typeId) {
   const meta = getTicketType(typeId);
   if (!interaction.guild && !interaction.guildId) {
     return interaction.reply({ content: '❌ Utilisable uniquement sur un serveur.', flags: MessageFlags.Ephemeral });
+  }
+  if (meta.boostersOnly && !(await memberIsBooster(interaction))) {
+    return interaction.reply({
+      content: '❌ Le ticket **Rôle Personnalisé** est réservé aux **boosters** du serveur.',
+      flags: MessageFlags.Ephemeral,
+    });
   }
 
   const modal = new ModalBuilder().setCustomId(`ticket_modal_${meta.id}`).setTitle(`${meta.label} — sujet`);
