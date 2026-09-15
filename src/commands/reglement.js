@@ -84,10 +84,10 @@ function buildReglementEmbeds(client) {
     ),
     barParagraph(
       '7. 👑 Le culte :',
-      '**7.1 Allégeance à Maxou :**',
+      '**__7.1 Allégeance à Maxou :__**',
       'Tout membre doit prêter allégeance à Maxou et lui faire régulièrement des offrandes sacrées. Une Monster est fortement appréciée par la Grandeur 🤌🏼',
       '',
-      '**7.2 Le dialecte du couscous**',
+      '**__7.2 Le dialecte du couscous :__**',
       'Tout membre se doit de parler et comprendre le dialecte ancestral du couscous.',
       '',
       'Tout manquement aux présentes règles pourra entraîner la prononciation obligatoire de « Gloire à Maxou » trois fois et la condamnation suprême : être privé de semoule pendant 3 jours.'
