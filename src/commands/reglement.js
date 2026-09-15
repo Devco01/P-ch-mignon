@@ -82,6 +82,16 @@ function buildReglementEmbeds(client) {
       '6. 🌿 Le mot d’ordre : bienveillance',
       `${brand} est avant tout un espace où chacun doit pouvoir se sentir à l’aise, respecté et en sécurité. Soyez respectueux envers les autres membres, la modération et vous-même. En cas de conflit ou de situation problématique, privilégiez le dialogue et faites appel à la modération.`
     ),
+    barParagraph(
+      '7. 👑 Le culte :',
+      '**7.1 Allégeance à Maxou :**',
+      'Tout membre doit prêter allégeance à Maxou et lui faire régulièrement des offrandes sacrées. Une Monster est fortement appréciée par la Grandeur 🤌🏼',
+      '',
+      '**7.2 Le dialecte du couscous**',
+      'Tout membre se doit de parler et comprendre le dialecte ancestral du couscous.',
+      '',
+      'Tout manquement aux présentes règles pourra entraîner la prononciation obligatoire de « Gloire à Maxou » trois fois et la condamnation suprême : être privé de semoule pendant 3 jours.'
+    ),
   ];
 
   const first = new EmbedBuilder()
