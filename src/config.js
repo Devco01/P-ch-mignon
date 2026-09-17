@@ -109,9 +109,9 @@ export const config = {
   useGuildMembersIntent,
   useMessageContentIntent,
   /** Embeds de sanctions (ban, warn, unban, unwarn). */
-  embedColorSanction: parseHexColor(process.env.EMBED_COLOR_SANCTION || process.env.DISCORD_EMBED_COLOR_SANCTION, 0xc8102e),
+  embedColorSanction: parseHexColor(process.env.EMBED_COLOR_SANCTION || process.env.DISCORD_EMBED_COLOR_SANCTION, 0xffffff),
   /** Embeds hors sanctions (présentation, tickets, analyse). */
-  embedColorOther: parseHexColor(process.env.EMBED_COLOR_OTHER || process.env.DISCORD_EMBED_COLOR_OTHER, 0xc8102e),
+  embedColorOther: parseHexColor(process.env.EMBED_COLOR_OTHER || process.env.DISCORD_EMBED_COLOR_OTHER, 0xffffff),
   /** Marque auteur des embeds (règlement, infos, sanctions). */
   embedBrand: (process.env.EMBED_BRAND || 'Le Nid Douillet⁺¹⁸').trim() || 'Le Nid Douillet⁺¹⁸',
   /** Texte du footer des embeds. */
