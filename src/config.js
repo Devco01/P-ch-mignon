@@ -113,11 +113,11 @@ export const config = {
   /** Embeds hors sanctions (présentation, tickets, analyse). */
   embedColorOther: parseHexColor(process.env.EMBED_COLOR_OTHER || process.env.DISCORD_EMBED_COLOR_OTHER, 0xc8102e),
   /** Marque auteur des embeds (règlement, infos, sanctions). */
-  embedBrand: (process.env.EMBED_BRAND || 'Péché Mignon').trim() || 'Péché Mignon',
+  embedBrand: (process.env.EMBED_BRAND || 'Le Nid Douillet⁺¹⁸').trim() || 'Le Nid Douillet⁺¹⁸',
   /** Texte du footer des embeds. */
   embedFooter:
-    (process.env.EMBED_FOOTER || 'Péché Mignon +18 | © All rights reserved.').trim() ||
-    'Péché Mignon +18 | © All rights reserved.',
+    (process.env.EMBED_FOOTER || 'Le Nid Douillet⁺¹⁸ | © All rights reserved.').trim() ||
+    'Le Nid Douillet⁺¹⁸ | © All rights reserved.',
   presentationReactions: parsePresentationReactions(),
   presentationResetChannelIds: parsePresentationResetChannelIds(),
   presentationResetMinBulk: parsePresentationResetMinBulk(),

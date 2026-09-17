@@ -1,7 +1,7 @@
 import { config } from './config.js';
 
 function getFooterBrand() {
-  return config.embedBrand || 'Péché Mignon';
+  return config.embedBrand || 'Le Nid Douillet⁺¹⁸';
 }
 
 export const COLOR_SANCTION = config.embedColorSanction;
@@ -30,7 +30,7 @@ export function getBotAuthor(client) {
 }
 
 export function getBotFooter(client, _options = {}) {
-  const text = config.embedFooter || 'Péché Mignon +18 | © All rights reserved.';
+  const text = config.embedFooter || 'Le Nid Douillet⁺¹⁸ | © All rights reserved.';
   const iconURL = getEmbedBrandIconURL(client);
   return iconURL ? { text, iconURL } : { text };
 }
