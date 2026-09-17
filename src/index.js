@@ -81,11 +81,16 @@ const AVATAR_SYNC_PATH = path.join(process.cwd(), 'data', 'avatar-sync.json');
 let instanceLockHeartbeat = null;
 let hasInstanceLock = false;
 
-async function syncBotAvatarWithGuild(client) {
-  const guild = (config.guildId && client.guilds.cache.get(config.guildId)) || client.guilds.cache.first();
+async function syncBotAvatarWithGuild(client, { force = false } = {}) {
+  let guild = (config.guildId && client.guilds.cache.get(config.guildId)) || client.guilds.cache.first();
   if (!guild) {
     console.warn("[Péché Mignon] Avatar: aucun serveur pour copier l’icône.");
     return;
+  }
+  try {
+    guild = await guild.fetch();
+  } catch (e) {
+    console.warn("[Péché Mignon] Avatar: fetch serveur impossible:", e?.message || e);
   }
   if (!guild.icon) {
     console.warn("[Péché Mignon] Avatar: le serveur n’a pas d’icône.");
@@ -97,16 +102,17 @@ async function syncBotAvatarWithGuild(client) {
     last = JSON.parse(fs.readFileSync(AVATAR_SYNC_PATH, 'utf8'));
   } catch (_) {}
 
-  if (last.guildId === guild.id && last.iconHash === guild.icon) return;
+  if (!force && last.guildId === guild.id && last.iconHash === guild.icon) return;
 
-  const iconURL = guild.iconURL({ size: 256 });
+  const animated = String(guild.icon).startsWith('a_');
+  const iconURL = guild.iconURL({ size: 512, extension: animated ? 'gif' : 'png' });
   if (!iconURL) return;
 
   try {
     await client.user.setAvatar(iconURL);
     fs.mkdirSync(path.dirname(AVATAR_SYNC_PATH), { recursive: true });
     fs.writeFileSync(AVATAR_SYNC_PATH, JSON.stringify({ guildId: guild.id, iconHash: guild.icon }));
-    console.log("[Péché Mignon] Photo de profil alignée sur l’icône du serveur.");
+    console.log("[Péché Mignon] Photo de profil alignée sur l’icône actuelle du serveur.");
   } catch (e) {
     console.warn("[Péché Mignon] Changement de photo de profil impossible:", e?.message || e);
   }
@@ -529,6 +535,16 @@ client.on(Events.InteractionCreate, async (interaction) => {
 });
 
 client.on(Events.Error, (err) => console.error("[Péché Mignon] Client error:", err));
+
+client.on(Events.GuildUpdate, async (oldGuild, newGuild) => {
+  if (config.guildId && newGuild.id !== config.guildId) return;
+  if (oldGuild.icon === newGuild.icon) return;
+  try {
+    await syncBotAvatarWithGuild(newGuild.client, { force: true });
+  } catch (err) {
+    console.warn("[Péché Mignon] Sync avatar après changement d’icône:", err?.message || err);
+  }
+});
 
 client.on(Events.MessageBulkDelete, async (messages, channel) => {
   try {

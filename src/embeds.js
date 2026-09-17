@@ -17,7 +17,7 @@ function getEmbedBrandIconURL(client) {
   const guildId = config.guildId;
   if (guildId && client) {
     const guild = client.guilds.cache.get(guildId);
-    const guildIcon = guild?.iconURL?.({ extension: 'png', size: 128, forceStatic: true });
+    const guildIcon = guild?.iconURL?.({ extension: 'png', size: 256, forceStatic: true });
     if (guildIcon) return guildIcon;
   }
   return getBotAvatarIconURL(client);
