@@ -671,8 +671,6 @@ client.on(Events.MessageUpdate, async (_oldMessage, newMessage) => {
   }
 });
 
-});
-
 client.on(Events.MessageDelete, async (message) => {
   try {
     await deleteBanProofsForDeletedMessage(message);
