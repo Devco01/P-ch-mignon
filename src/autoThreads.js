@@ -1,12 +1,6 @@
-import {
-  PermissionFlagsBits,
-  ThreadAutoArchiveDuration,
-  SlashCommandBuilder,
-  MessageFlags,
-} from 'discord.js';
+import { PermissionFlagsBits, ThreadAutoArchiveDuration } from 'discord.js';
 import { config, isAutoMediaCategoryChannel } from './config.js';
 import { getTicketByThreadId, listConfessionLogConfigsForGuild } from './database.js';
-import { hasAdminRole } from './permissions.js';
 
 const MEDIA_ATTACHMENT_EXT = /\.(png|jpe?g|gif|webp|bmp|heic|heif|mp4|mov|webm)$/i;
 const URL_IN_TEXT = /(?:https?:\/\/|www\.)[^\s<]+|discord\.gg\/[^\s<]+/i;
@@ -259,54 +253,4 @@ export async function deleteAutoThreadsForBulkRemoved(messages) {
   for (const message of messages.values()) {
     await deleteAutoThreadIfStarterRemoved(message);
   }
-}
-
-export const threadCommands = [
-  new SlashCommandBuilder()
-    .setName('fil-fermer')
-    .setDescription('Archiver ce fil (admins / owner). L’accès en lecture reste possible.')
-    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
-    .setDMPermission(false)
-    .toJSON(),
-];
-
-export async function handleFilFermer(interaction) {
-  if (!(await hasAdminRole(interaction))) {
-    return interaction.reply({
-      content: '❌ Réservé aux **administrateurs** et au **propriétaire** du serveur.',
-      flags: MessageFlags.Ephemeral,
-    });
-  }
-  const thread = interaction.channel;
-  if (!thread || typeof thread.isThread !== 'function' || !thread.isThread()) {
-    return interaction.reply({
-      content: '❌ Utilise cette commande **dans le fil** à fermer.',
-      flags: MessageFlags.Ephemeral,
-    });
-  }
-  const ticket = await getTicketByThreadId(thread.id).catch(() => null);
-  if (ticket) {
-    return interaction.reply({
-      content: '❌ Pour un ticket, utilise le bouton **Fermer** dans le fil.',
-      flags: MessageFlags.Ephemeral,
-    });
-  }
-  if (thread.archived) {
-    return interaction.reply({
-      content: '✅ Ce fil est déjà archivé. L’accès reste possible.',
-      flags: MessageFlags.Ephemeral,
-    });
-  }
-  try {
-    await thread.setArchived(true, `Fermé manuellement par ${interaction.user.tag}`);
-  } catch (err) {
-    return interaction.reply({
-      content: `❌ Impossible d’archiver ce fil : ${err?.message || 'erreur'}`,
-      flags: MessageFlags.Ephemeral,
-    });
-  }
-  return interaction.reply({
-    content: '✅ Fil archivé. Il reste accessible (pas verrouillé).',
-    flags: MessageFlags.Ephemeral,
-  });
 }

@@ -59,7 +59,7 @@ import {
 import { handlePresentationChannelBulkDelete, handlePresentationChannelDelete } from './presentationReset.js';
 import { persistBanProofMessage, deleteBanProofsForDeletedMessage } from './banProofs.js';
 import { handleSelfieChannelReaction } from './selfieReactions.js';
-import { handleAutoThreadMessage, deleteAutoThreadIfStarterRemoved, deleteAutoThreadsForBulkRemoved, startIdleThreadArchiver, stopIdleThreadArchiver, handleFilFermer } from './autoThreads.js';
+import { handleAutoThreadMessage, deleteAutoThreadIfStarterRemoved, deleteAutoThreadsForBulkRemoved, startIdleThreadArchiver, stopIdleThreadArchiver } from './autoThreads.js';
 import {
   handleConfession,
   handleConfessionReponse,
@@ -565,9 +565,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
         break;
       case 'informations':
         await handleInformations(interaction);
-        break;
-      case 'fil-fermer':
-        await handleFilFermer(interaction);
         break;
       default:
         await interaction.reply({ content: 'Commande inconnue.', flags: MessageFlags.Ephemeral });
