@@ -118,6 +118,44 @@ async function syncBotAvatarWithGuild(client, { force = false } = {}) {
   }
 }
 
+async function syncBotDisplayName(client) {
+  const name = (config.embedBrand || '').trim();
+  if (!name) return;
+
+  if (client.user.username !== name) {
+    try {
+      await client.user.setUsername(name);
+      console.log(`[Péché Mignon] Nom d’utilisateur Discord : ${name}`);
+    } catch (e) {
+      console.warn("[Péché Mignon] Changement de nom d’utilisateur impossible:", e?.message || e);
+    }
+  }
+
+  if (typeof client.user.setGlobalName === 'function' && client.user.globalName !== name) {
+    try {
+      await client.user.setGlobalName(name);
+      console.log(`[Péché Mignon] Nom d’affichage global : ${name}`);
+    } catch (e) {
+      console.warn("[Péché Mignon] Changement de nom d’affichage impossible:", e?.message || e);
+    }
+  }
+
+  const guild = (config.guildId && client.guilds.cache.get(config.guildId)) || client.guilds.cache.first();
+  if (!guild) return;
+  const me = guild.members.me ?? (await guild.members.fetchMe().catch(() => null));
+  if (!me) return;
+  if (me.nickname === name) {
+    console.log(`[Péché Mignon] Surnom serveur déjà à jour : ${name}`);
+    return;
+  }
+  try {
+    await me.setNickname(name, 'Aligner le nom du bot sur Le Nid Douillet');
+    console.log(`[Péché Mignon] Surnom serveur : ${name}`);
+  } catch (e) {
+    console.warn("[Péché Mignon] Changement de surnom impossible:", e?.message || e);
+  }
+}
+
 async function safeReleaseInstanceLock(reason) {
   if (DISABLE_INSTANCE_LOCK || !hasInstanceLock) return;
   try {
@@ -344,6 +382,12 @@ client.once(Events.ClientReady, async (c) => {
     await syncBotAvatarWithGuild(c);
   } catch (e) {
     console.warn("[Péché Mignon] Synchronisation de l’avatar impossible:", e?.message || e);
+  }
+
+  try {
+    await syncBotDisplayName(c);
+  } catch (e) {
+    console.warn("[Péché Mignon] Synchronisation du nom impossible:", e?.message || e);
   }
 
   startRateLimitCleanup();
