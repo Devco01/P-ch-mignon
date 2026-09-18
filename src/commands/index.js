@@ -4,6 +4,7 @@ import { ticketCommands } from './tickets.js';
 import { confessionCommands } from './confession.js';
 import { reglementCommands } from './reglement.js';
 import { informationsCommands } from './informations.js';
+import { threadCommands } from '../autoThreads.js';
 
 export const commands = [
   ...moderationCommands,
@@ -12,4 +13,5 @@ export const commands = [
   ...confessionCommands,
   ...reglementCommands,
   ...informationsCommands,
+  ...threadCommands,
 ];

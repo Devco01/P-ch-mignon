@@ -58,8 +58,8 @@ import {
 } from './commands/tickets.js';
 import { handlePresentationChannelBulkDelete, handlePresentationChannelDelete } from './presentationReset.js';
 import { persistBanProofMessage, deleteBanProofsForDeletedMessage } from './banProofs.js';
-import { handleSelfieChannelReaction, keepSelfieThreadOpen } from './selfieReactions.js';
-import { handleAutoThreadMessage, keepAutoThreadOpen, deleteAutoThreadIfStarterRemoved, deleteAutoThreadsForBulkRemoved } from './autoThreads.js';
+import { handleSelfieChannelReaction } from './selfieReactions.js';
+import { handleAutoThreadMessage, deleteAutoThreadIfStarterRemoved, deleteAutoThreadsForBulkRemoved, startIdleThreadArchiver, stopIdleThreadArchiver, handleFilFermer } from './autoThreads.js';
 import {
   handleConfession,
   handleConfessionReponse,
@@ -391,6 +391,7 @@ client.once(Events.ClientReady, async (c) => {
   }
 
   startRateLimitCleanup();
+  startIdleThreadArchiver(c);
   try {
     const registered = await registerCommands();
     const scope = config.guildId ? `serveur ${config.guildId}` : 'tous les serveurs (global)';
@@ -413,6 +414,7 @@ client.once(Events.ClientReady, async (c) => {
     console.warn("[Péché Mignon] Republier le panneau tickets impossible:", e?.message || e);
   }
   console.log(`[Péché Mignon] Connecté en tant que ${c.user.tag} (instance=${instanceId} pid=${process.pid})`);
+  console.log(`[Péché Mignon] Archivage auto des fils publics : ${config.autoThreadArchiveMinutes} min (sans verrouillage).`);
   if (config.useGuildMembersIntent) {
     console.log("[Péché Mignon] Intent Guild Members activé → autocomplétion /ban /warn et /analyse.");
   } else {
@@ -564,6 +566,9 @@ client.on(Events.InteractionCreate, async (interaction) => {
       case 'informations':
         await handleInformations(interaction);
         break;
+      case 'fil-fermer':
+        await handleFilFermer(interaction);
+        break;
       default:
         await interaction.reply({ content: 'Commande inconnue.', flags: MessageFlags.Ephemeral });
     }
@@ -666,17 +671,6 @@ client.on(Events.MessageUpdate, async (_oldMessage, newMessage) => {
   }
 });
 
-client.on(Events.ThreadUpdate, async (oldThread, newThread) => {
-  try {
-    await keepSelfieThreadOpen(oldThread, newThread);
-  } catch (err) {
-    console.error("[Péché Mignon] Erreur maintien fil selfie:", err?.message || err);
-  }
-  try {
-    await keepAutoThreadOpen(oldThread, newThread);
-  } catch (err) {
-    console.error("[Péché Mignon] Erreur maintien auto-fil:", err?.message || err);
-  }
 });
 
 client.on(Events.MessageDelete, async (message) => {
@@ -750,12 +744,14 @@ client.on(Events.GuildBanRemove, async (ban) => {
 
 process.on('SIGINT', () => {
   stopRateLimitCleanup();
+  stopIdleThreadArchiver();
   safeReleaseInstanceLock('SIGINT').catch(() => {});
   client.destroy();
   process.exit(0);
 });
 process.on('SIGTERM', () => {
   stopRateLimitCleanup();
+  stopIdleThreadArchiver();
   safeReleaseInstanceLock('SIGTERM').catch(() => {});
   client.destroy();
   process.exit(0);
@@ -763,6 +759,7 @@ process.on('SIGTERM', () => {
 process.on('uncaughtException', (err) => {
   console.error("[Péché Mignon] uncaughtException:", err?.stack || err?.message || err);
   stopRateLimitCleanup();
+  stopIdleThreadArchiver();
   safeReleaseInstanceLock('uncaughtException')
     .catch(() => {})
     .finally(() => process.exit(1));
@@ -770,6 +767,7 @@ process.on('uncaughtException', (err) => {
 process.on('unhandledRejection', (reason) => {
   console.error("[Péché Mignon] unhandledRejection:", reason?.stack || reason?.message || reason);
   stopRateLimitCleanup();
+  stopIdleThreadArchiver();
   safeReleaseInstanceLock('unhandledRejection')
     .catch(() => {})
     .finally(() => process.exit(1));

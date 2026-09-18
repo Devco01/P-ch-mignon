@@ -93,7 +93,7 @@ async function ensureSelfieThread(message, me) {
 
   const opts = {
     name: selfieThreadName(message),
-    autoArchiveDuration: ThreadAutoArchiveDuration.OneWeek,
+    autoArchiveDuration: ThreadAutoArchiveDuration.OneHour,
     reason: 'Fil automatique sous l’image.',
   };
 
@@ -176,30 +176,4 @@ export async function handleSelfieChannelReaction(message) {
   const me = message.guild.members.me ?? (await message.guild.members.fetchMe().catch(() => null));
   await ensureSelfieThread(message, me);
   await addSelfieReactions(message, me);
-}
-
-/** Discord archive forcément les fils inactifs : on les rouvre tout de suite. */
-export async function keepSelfieThreadOpen(_oldThread, newThread) {
-  const thread = newThread;
-  if (!thread?.parentId) return;
-  const parent = thread.parent ?? (await thread.guild?.channels?.fetch?.(thread.parentId).catch(() => null));
-  const keep =
-    config.selfieChannelIds.has(thread.parentId) || isAutoMediaCategoryChannel(parent);
-  if (!keep) return;
-  if (!thread.archived) return;
-  if (thread.locked) return;
-
-  try {
-    const me = thread.guild?.members?.me;
-    if (me && parent && typeof me.permissionsIn === 'function') {
-      const perms = me.permissionsIn(parent);
-      if (perms && !perms.has(PermissionFlagsBits.ManageThreads)) {
-        console.warn(`[Péché Mignon] selfie: permission « Gérer les fils » manquante pour désarchiver ${thread.id}.`);
-        return;
-      }
-    }
-    await thread.setArchived(false, 'Les fils selfies restent ouverts.');
-  } catch (err) {
-    console.warn(`[Péché Mignon] selfie désarchivage impossible (${thread.id}):`, err?.message || err);
-  }
 }

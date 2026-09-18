@@ -1,6 +1,12 @@
-import { PermissionFlagsBits, ThreadAutoArchiveDuration } from 'discord.js';
+import {
+  PermissionFlagsBits,
+  ThreadAutoArchiveDuration,
+  SlashCommandBuilder,
+  MessageFlags,
+} from 'discord.js';
 import { config, isAutoMediaCategoryChannel } from './config.js';
-import { getTicketByThreadId } from './database.js';
+import { getTicketByThreadId, listConfessionLogConfigsForGuild } from './database.js';
+import { hasAdminRole } from './permissions.js';
 
 const MEDIA_ATTACHMENT_EXT = /\.(png|jpe?g|gif|webp|bmp|heic|heif|mp4|mov|webm)$/i;
 const URL_IN_TEXT = /(?:https?:\/\/|www\.)[^\s<]+|discord\.gg\/[^\s<]+/i;
@@ -79,7 +85,7 @@ async function ensureThread(message, me) {
 
   const opts = {
     name: threadName(message),
-    autoArchiveDuration: ThreadAutoArchiveDuration.OneWeek,
+    autoArchiveDuration: ThreadAutoArchiveDuration.OneHour,
     reason: 'Fil automatique sous l’image ou le lien.',
   };
 
@@ -113,29 +119,90 @@ export async function handleAutoThreadMessage(message) {
   await ensureThread(message, me);
 }
 
-export async function keepAutoThreadOpen(_oldThread, newThread) {
-  const thread = newThread;
-  if (!thread?.parentId) return;
-  const parent = thread.parent ?? (await thread.guild?.channels?.fetch?.(thread.parentId).catch(() => null));
-  const keep =
-    config.autoThreadChannelIds.has(thread.parentId) || isAutoMediaCategoryChannel(parent);
-  if (!keep) return;
-  if (!thread.archived) return;
-  if (thread.locked) return;
-
+function snowflakeTimeMs(id) {
+  if (!id) return 0;
   try {
-    const me = thread.guild?.members?.me;
-    if (me && parent && typeof me.permissionsIn === 'function') {
-      const perms = me.permissionsIn(parent);
-      if (perms && !perms.has(PermissionFlagsBits.ManageThreads)) {
-        console.warn(`[Péché Mignon] auto-fil: permission « Gérer les fils » manquante pour désarchiver ${thread.id}.`);
-        return;
+    return Number((BigInt(id) >> 22n) + 1420070400000n);
+  } catch (_) {
+    return 0;
+  }
+}
+
+function threadLastActivityMs(thread) {
+  return snowflakeTimeMs(thread.lastMessageId) || thread.createdTimestamp || 0;
+}
+
+async function isPublicDiscussionThread(thread, confessionSourceIds) {
+  if (!thread || typeof thread.isThread !== 'function' || !thread.isThread()) return false;
+  if (thread.archived || thread.locked) return false;
+  if (thread.type === 12) return false;
+  const ticket = await getTicketByThreadId(thread.id).catch(() => null);
+  if (ticket) return false;
+  const parentId = thread.parentId;
+  if (!parentId) return false;
+  if (config.ticketChannelId && parentId === config.ticketChannelId) return false;
+  if (config.banLogChannelId && parentId === config.banLogChannelId) return false;
+  if (config.autoThreadChannelIds.has(parentId)) return true;
+  if (config.selfieChannelIds.has(parentId)) return true;
+  if (confessionSourceIds?.has(parentId)) return true;
+  const parent = thread.parent ?? (await thread.guild?.channels?.fetch?.(parentId).catch(() => null));
+  if (isAutoMediaCategoryChannel(parent)) return true;
+  return false;
+}
+
+async function archiveIdleAutoThreadsForGuild(guild) {
+  const idleMs = (config.autoThreadArchiveMinutes || 30) * 60 * 1000;
+  const now = Date.now();
+  const confessionSourceIds = new Set(
+    ((await listConfessionLogConfigsForGuild(guild.id).catch(() => [])) || []).map((c) => c.sourceChannelId).filter(Boolean)
+  );
+  let active;
+  try {
+    active = await guild.channels.fetchActiveThreads();
+  } catch (err) {
+    console.warn(`[Péché Mignon] fetch fils actifs impossible:`, err?.message || err);
+    return 0;
+  }
+  const threads = active?.threads;
+  if (!threads?.size) return 0;
+  let archived = 0;
+  for (const thread of threads.values()) {
+    if (!(await isPublicDiscussionThread(thread, confessionSourceIds))) continue;
+    const last = threadLastActivityMs(thread);
+    if (!last || now - last < idleMs) continue;
+    try {
+      await thread.setArchived(true, `Inactivité ${config.autoThreadArchiveMinutes} min`);
+      archived += 1;
+    } catch (err) {
+      console.warn(`[Péché Mignon] Archivage fil ${thread.id} impossible:`, err?.message || err);
+    }
+  }
+  return archived;
+}
+
+let archiveInterval = null;
+
+export function startIdleThreadArchiver(client) {
+  if (archiveInterval) return;
+  const run = async () => {
+    for (const guild of client.guilds.cache.values()) {
+      try {
+        const n = await archiveIdleAutoThreadsForGuild(guild);
+        if (n) console.log(`[Péché Mignon] ${n} fil(s) archivé(s) après ${config.autoThreadArchiveMinutes} min d’inactivité.`);
+      } catch (err) {
+        console.warn(`[Péché Mignon] Archivage auto fils:`, err?.message || err);
       }
     }
-    await thread.setArchived(false, 'Les fils automatiques restent ouverts.');
-  } catch (err) {
-    console.warn(`[Péché Mignon] auto-fil désarchivage impossible (${thread.id}):`, err?.message || err);
-  }
+  };
+  archiveInterval = setInterval(run, 60 * 1000);
+  if (typeof archiveInterval.unref === 'function') archiveInterval.unref();
+  setTimeout(run, 15 * 1000).unref?.();
+}
+
+export function stopIdleThreadArchiver() {
+  if (!archiveInterval) return;
+  clearInterval(archiveInterval);
+  archiveInterval = null;
 }
 
 function isAutoThreadParentChannelId(channel) {
@@ -192,4 +259,54 @@ export async function deleteAutoThreadsForBulkRemoved(messages) {
   for (const message of messages.values()) {
     await deleteAutoThreadIfStarterRemoved(message);
   }
+}
+
+export const threadCommands = [
+  new SlashCommandBuilder()
+    .setName('fil-fermer')
+    .setDescription('Archiver ce fil (admins / owner). L’accès en lecture reste possible.')
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+    .setDMPermission(false)
+    .toJSON(),
+];
+
+export async function handleFilFermer(interaction) {
+  if (!(await hasAdminRole(interaction))) {
+    return interaction.reply({
+      content: '❌ Réservé aux **administrateurs** et au **propriétaire** du serveur.',
+      flags: MessageFlags.Ephemeral,
+    });
+  }
+  const thread = interaction.channel;
+  if (!thread || typeof thread.isThread !== 'function' || !thread.isThread()) {
+    return interaction.reply({
+      content: '❌ Utilise cette commande **dans le fil** à fermer.',
+      flags: MessageFlags.Ephemeral,
+    });
+  }
+  const ticket = await getTicketByThreadId(thread.id).catch(() => null);
+  if (ticket) {
+    return interaction.reply({
+      content: '❌ Pour un ticket, utilise le bouton **Fermer** dans le fil.',
+      flags: MessageFlags.Ephemeral,
+    });
+  }
+  if (thread.archived) {
+    return interaction.reply({
+      content: '✅ Ce fil est déjà archivé. L’accès reste possible.',
+      flags: MessageFlags.Ephemeral,
+    });
+  }
+  try {
+    await thread.setArchived(true, `Fermé manuellement par ${interaction.user.tag}`);
+  } catch (err) {
+    return interaction.reply({
+      content: `❌ Impossible d’archiver ce fil : ${err?.message || 'erreur'}`,
+      flags: MessageFlags.Ephemeral,
+    });
+  }
+  return interaction.reply({
+    content: '✅ Fil archivé. Il reste accessible (pas verrouillé).',
+    flags: MessageFlags.Ephemeral,
+  });
 }

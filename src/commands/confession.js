@@ -347,7 +347,7 @@ export async function handleConfession(interaction) {
     await sent.startThread({
       name: threadName,
       reason: 'Fil de discussion lié à une confession.',
-      autoArchiveDuration: ThreadAutoArchiveDuration.OneDay,
+      autoArchiveDuration: ThreadAutoArchiveDuration.OneHour,
     });
   } catch (e) {
     console.warn("[Péché Mignon] /confession fil: création impossible:", e?.message || e);

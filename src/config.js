@@ -155,6 +155,12 @@ export const config = {
     process.env.MEMBER_SLASH_ROLE_IDS || '1547936068488400896,1547947506757799966'
   ),
   messageLogChannelId: envId('MESSAGE_LOG_CHANNEL_ID'),
+  /** Archivage auto des fils publics (selfies, auto-fils, confessions). Discord min natif = 60 min. */
+  autoThreadArchiveMinutes: (() => {
+    const n = parseInt(process.env.AUTO_THREAD_ARCHIVE_MINUTES, 10);
+    if (!Number.isFinite(n) || n < 5) return 30;
+    return Math.min(n, 60);
+  })(),
 };
 
 /** Catégorie Discord d’un salon (ou du salon parent si c’est un fil). */
