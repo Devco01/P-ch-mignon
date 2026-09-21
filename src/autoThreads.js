@@ -64,16 +64,29 @@ async function resolveExistingThread(message) {
   return null;
 }
 
+async function announceLinkThread(message, thread) {
+  if (!message || !thread) return;
+  if (message.attachments?.size) return;
+  try {
+    await message.reply({
+      content: `💬 ${thread}`,
+      allowedMentions: { parse: [], repliedUser: false },
+    });
+  } catch (err) {
+    console.warn(`[Péché Mignon] auto-fil annonce:`, err?.message || err);
+  }
+}
+
 async function ensureThread(message, me) {
   const existing = await resolveExistingThread(message);
-  if (existing) return existing;
+  if (existing) return { thread: existing, created: false };
 
   const channel = message.channel;
   if (me && channel && typeof me.permissionsIn === 'function') {
     const perms = me.permissionsIn(channel);
     if (perms && !perms.has(PermissionFlagsBits.CreatePublicThreads)) {
       console.warn(`[Péché Mignon] auto-fil: permission « Créer des fils publics » manquante sur ${message.channelId}.`);
-      return null;
+      return { thread: null, created: false };
     }
   }
 
@@ -87,18 +100,18 @@ async function ensureThread(message, me) {
     try {
       const thread = await message.startThread(opts);
       console.log(`[Péché Mignon] auto-fil créé sous ${message.id}: ${thread.id}`);
-      return thread;
+      return { thread, created: true };
     } catch (err) {
       const recovered = await resolveExistingThread(await message.fetch?.().catch(() => message));
-      if (recovered) return recovered;
+      if (recovered) return { thread: recovered, created: false };
       if (attempt >= 2) {
         console.warn(`[Péché Mignon] auto-fil impossible (${message.id}):`, err?.message || err);
-        return null;
+        return { thread: null, created: false };
       }
       await wait(400 * (attempt + 1));
     }
   }
-  return null;
+  return { thread: null, created: false };
 }
 
 export async function handleAutoThreadMessage(message) {
@@ -110,7 +123,8 @@ export async function handleAutoThreadMessage(message) {
   rememberHandled(message.id);
 
   const me = message.guild.members.me ?? (await message.guild.members.fetchMe().catch(() => null));
-  await ensureThread(message, me);
+  const { thread, created } = await ensureThread(message, me);
+  if (created) await announceLinkThread(message, thread);
 }
 
 function snowflakeTimeMs(id) {
