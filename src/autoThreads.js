@@ -64,29 +64,16 @@ async function resolveExistingThread(message) {
   return null;
 }
 
-async function announceLinkThread(message, thread) {
-  if (!message || !thread) return;
-  if (message.attachments?.size) return;
-  try {
-    await message.reply({
-      content: `💬 ${thread}`,
-      allowedMentions: { parse: [], repliedUser: false },
-    });
-  } catch (err) {
-    console.warn(`[Péché Mignon] auto-fil annonce:`, err?.message || err);
-  }
-}
-
 async function ensureThread(message, me) {
   const existing = await resolveExistingThread(message);
-  if (existing) return { thread: existing, created: false };
+  if (existing) return existing;
 
   const channel = message.channel;
   if (me && channel && typeof me.permissionsIn === 'function') {
     const perms = me.permissionsIn(channel);
     if (perms && !perms.has(PermissionFlagsBits.CreatePublicThreads)) {
       console.warn(`[Péché Mignon] auto-fil: permission « Créer des fils publics » manquante sur ${message.channelId}.`);
-      return { thread: null, created: false };
+      return null;
     }
   }
 
@@ -100,31 +87,61 @@ async function ensureThread(message, me) {
     try {
       const thread = await message.startThread(opts);
       console.log(`[Péché Mignon] auto-fil créé sous ${message.id}: ${thread.id}`);
-      return { thread, created: true };
+      return thread;
     } catch (err) {
       const recovered = await resolveExistingThread(await message.fetch?.().catch(() => message));
-      if (recovered) return { thread: recovered, created: false };
+      if (recovered) return recovered;
       if (attempt >= 2) {
         console.warn(`[Péché Mignon] auto-fil impossible (${message.id}):`, err?.message || err);
-        return { thread: null, created: false };
+        return null;
       }
       await wait(400 * (attempt + 1));
     }
   }
-  return { thread: null, created: false };
+  return null;
 }
 
-export async function handleAutoThreadMessage(message) {
+function isLinkWaitingForEmbed(message) {
+  if (message.attachments?.size) return false;
+  if ((message.embeds || []).length > 0) return false;
+  return messageHasLink(message);
+}
+
+const pendingEmbedThreads = new Map();
+
+function scheduleLinkThreadAfterEmbed(message) {
+  if (!message?.id || pendingEmbedThreads.has(message.id)) return;
+  const timer = setTimeout(async () => {
+    pendingEmbedThreads.delete(message.id);
+    const fresh = await message.fetch?.().catch(() => message);
+    await handleAutoThreadMessage(fresh, { skipEmbedWait: true });
+  }, 3500);
+  if (typeof timer.unref === 'function') timer.unref();
+  pendingEmbedThreads.set(message.id, timer);
+}
+
+function cancelLinkThreadWait(messageId) {
+  const timer = pendingEmbedThreads.get(messageId);
+  if (!timer) return;
+  clearTimeout(timer);
+  pendingEmbedThreads.delete(messageId);
+}
+
+export async function handleAutoThreadMessage(message, { skipEmbedWait = false } = {}) {
   if (!message?.guild || message.author?.bot) return;
   if (!isAutoThreadParentChannel(message)) return;
   if (!messageHasImageOrVideo(message) && !messageHasLink(message)) return;
+  if (!skipEmbedWait && isLinkWaitingForEmbed(message)) {
+    scheduleLinkThreadAfterEmbed(message);
+    return;
+  }
+  cancelLinkThreadWait(message.id);
   if (recentlyHandled.has(message.id)) return;
 
   rememberHandled(message.id);
 
   const me = message.guild.members.me ?? (await message.guild.members.fetchMe().catch(() => null));
-  const { thread, created } = await ensureThread(message, me);
-  if (created) await announceLinkThread(message, thread);
+  await ensureThread(message, me);
 }
 
 function snowflakeTimeMs(id) {
